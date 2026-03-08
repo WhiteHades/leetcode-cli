@@ -775,19 +775,19 @@ function handleGenericKeyPress(model: AppModel, msg: AppMsg): [AppModel, Command
     const configModel = screenState.model as import('./types.js').ConfigScreenModel;
     let configMsg: import('./types.js').ConfigMsg | null = null;
 
-    if (key.name === 'tab' || key.name === 'h' || key.name === 'l') {
-      configMsg = { type: 'CONFIG_TOGGLE_FOCUS' };
-    } else if (key.name === 'left') {
-      configMsg = { type: 'CONFIG_FOCUS_LIST' };
-    } else if (key.name === 'right') {
-      configMsg = { type: 'CONFIG_FOCUS_EDITOR' };
-    } else if (configModel.isEditing) {
+    if (configModel.isEditing) {
       if (key.name === 'escape') configMsg = { type: 'CONFIG_EDIT_CANCEL' };
       else if (key.name === 'return' || key.name === 'enter')
         configMsg = { type: 'CONFIG_EDIT_SAVE' };
       else if (key.name === 'backspace') configMsg = { type: 'CONFIG_EDIT_BACKSPACE' };
       else if (key.sequence.length === 1 && !key.ctrl && !key.meta)
         configMsg = { type: 'CONFIG_EDIT_INPUT', char: key.sequence };
+    } else if (key.name === 'tab' || key.name === 'h' || key.name === 'l') {
+      configMsg = { type: 'CONFIG_TOGGLE_FOCUS' };
+    } else if (key.name === 'left') {
+      configMsg = { type: 'CONFIG_FOCUS_LIST' };
+    } else if (key.name === 'right') {
+       configMsg = { type: 'CONFIG_FOCUS_EDITOR' };
     } else {
       if (key.name === 'j' || key.name === 'down') configMsg = { type: 'CONFIG_OPTION_DOWN' };
       else if (key.name === 'k' || key.name === 'up') configMsg = { type: 'CONFIG_OPTION_UP' };
