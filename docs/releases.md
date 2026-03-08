@@ -1,8 +1,19 @@
 # Release Notes
 
+## v2.4.1
+
+> **Release Date**: 2026-03-08
+> **Focus**: TUI Config Editing Hotfix
+
+### 🐛 Bug Fixes
+
+- **TUI Config Key Hijacking** ([#3](https://github.com/night-slayer18/leetcode-cli/pull/3)): Fixed an issue where global navigation hotkeys (`h`, `l`, `tab`) would intercept keystrokes while editing a config field in the TUI. For example, typing `python3` as the default language would fail because the `h` key triggered a focus-toggle instead of inserting text. The fix ensures that when a config field is in edit mode (`isEditing`), text input takes precedence over all interface hotkeys.
+
+---
+
 ## v2.4.0
 
-> **Release Date**: 2026-03-01
+> **Release Date**: 2026-02-28
 > **Focus**: SQL Language Support + Cross-OS CLI E2E Coverage + Sync Security Hardening
 
 ### 🚀 Features
