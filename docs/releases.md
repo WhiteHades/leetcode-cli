@@ -1,5 +1,44 @@
 # Release Notes
 
+## v3.0.0
+
+> **Release Date**: 2026-03-10
+> **Focus**: Credential Backend Overhaul (Keychain-First) + Auth Hardening
+
+### ⚠️ Breaking Changes
+
+- Credential persistence model is now backend-driven and no longer reads legacy plaintext `~/.leetcode/credentials.json`.
+- Existing users with only legacy plaintext credentials must run `leetcode login` again.
+- Default credential backend is now OS keychain (`keytar`).
+
+### 🔐 Security & Auth
+
+- Added deterministic credential backend resolver:
+  - `env-readonly` mode when `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN` are both set.
+  - `keychain` backend by default.
+  - Explicit encrypted-file backend via `LEETCODECLI_CREDENTIAL_BACKEND=file` + `LEETCODECLI_MASTER_KEY`.
+- Added typed auth storage status/reason handling across CLI and TUI:
+  - `ENV_PARTIAL`, `KEYCHAIN_UNAVAILABLE`, `KEYCHAIN_ERROR`, `FILE_MISSING_MASTER_KEY`, `FILE_DECRYPT_FAILED`, `LEGACY_CREDENTIALS_IGNORED`.
+- Updated `login`, `logout`, `whoami`, and shared auth checks with consistent remediation messaging.
+
+### ⚙️ Runtime & Platform
+
+- Added Linux keychain prerequisites in CI for deterministic native module builds (`libsecret-1-dev`, `pkg-config`).
+- Updated Docker image build/runtime dependencies for keytar compatibility in Linux containers.
+- Docker/headless guidance now documents env-readonly auth usage.
+
+### 🧪 Testing
+
+- Added dedicated credential-store tests for resolver precedence, reason states, encrypted file read/write, and legacy-ignore behavior.
+- Added CLI and TUI auth tests for env-readonly mode and keychain-unavailable handling.
+
+### 🔧 Additional Merged Fixes
+
+- Included merged PR [#5](https://github.com/night-slayer18/leetcode-cli/pull/5):
+  - **Config file write normalization**: `config` writes now include a trailing newline for POSIX-friendly file formatting.
+
+---
+
 ## v2.4.1
 
 > **Release Date**: 2026-03-08

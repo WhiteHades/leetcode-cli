@@ -13,6 +13,48 @@ The CLI requires your LeetCode authentication cookies.
    ```
 5. Paste the values.
 
+## Credential Storage
+
+Credential backend is selected via environment variable:
+
+- Default: `LEETCODECLI_CREDENTIAL_BACKEND=keychain` (system keychain)
+- Optional: `LEETCODECLI_CREDENTIAL_BACKEND=file` (encrypted file backend)
+- File backend requires: `LEETCODECLI_MASTER_KEY`
+- Read-only env mode: set both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN`
+
+When env mode is active, `login/logout` do not persist or clear credentials.
+
+## Windows (PowerShell) Examples
+
+Set backend selection:
+
+```powershell
+$env:LEETCODECLI_CREDENTIAL_BACKEND = "keychain"
+```
+
+Use encrypted file backend:
+
+```powershell
+$env:LEETCODECLI_CREDENTIAL_BACKEND = "file"
+$env:LEETCODECLI_MASTER_KEY = "<your_master_key>"
+```
+
+Use env read-only auth mode:
+
+```powershell
+$env:LEETCODE_SESSION = "<session_cookie>"
+$env:LEETCODE_CSRF_TOKEN = "<csrf_cookie>"
+```
+
+Clear env variables:
+
+```powershell
+Remove-Item Env:LEETCODECLI_CREDENTIAL_BACKEND -ErrorAction SilentlyContinue
+Remove-Item Env:LEETCODECLI_MASTER_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:LEETCODE_SESSION -ErrorAction SilentlyContinue
+Remove-Item Env:LEETCODE_CSRF_TOKEN -ErrorAction SilentlyContinue
+```
+
 ## Config Command
 
 Use `leetcode config` to view or modify settings.
@@ -55,7 +97,7 @@ Settings are now stored per-workspace for isolation:
 | Timer       | `~/.leetcode/workspaces/<name>/timer.json`  | Per-workspace |
 | Collab      | `~/.leetcode/workspaces/<name>/collab.json` | Per-workspace |
 | Snapshots   | `~/.leetcode/workspaces/<name>/snapshots/`  | Per-workspace |
-| Credentials | `~/.leetcode/credentials.json`              | Shared        |
+| Credentials | Keychain (default) or `~/.leetcode/credentials.v2.enc.json` (file backend) | Shared |
 | Bookmarks   | `~/.leetcode/bookmarks.json`                | Shared        |
 
 Use `leetcode workspace current` to see which workspace is active.

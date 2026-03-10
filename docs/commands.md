@@ -43,6 +43,11 @@ See [TUI Guide](tui.md) for complete behavior and screen-specific shortcuts.
 
 Login to LeetCode with browser cookies.
 
+Notes:
+- Default credential backend is system keychain.
+- Set `LEETCODECLI_CREDENTIAL_BACKEND=file` with `LEETCODECLI_MASTER_KEY` for encrypted file mode.
+- If both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN` are set, login runs in read-only env mode.
+
 **Usage**: `leetcode login`
 
 ---
@@ -50,6 +55,9 @@ Login to LeetCode with browser cookies.
 ### `leetcode logout`
 
 Clear stored credentials.
+
+Note:
+- In env auth mode (`LEETCODE_SESSION` + `LEETCODE_CSRF_TOKEN`), unset env vars in your shell to log out.
 
 **Usage**: `leetcode logout`
 

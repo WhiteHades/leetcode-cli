@@ -410,31 +410,36 @@ leetcode/
 
 ## Authentication
 
-This CLI uses cookie-based authentication. To login:
+This CLI uses cookie-based authentication from your LeetCode browser session.
 
 1. Open [leetcode.com](https://leetcode.com) in your browser
 2. Login to your account
 3. Open DevTools (F12) → Application → Cookies → leetcode.com
 4. Run `leetcode login` and paste your `LEETCODE_SESSION` and `csrftoken` values
 
-## Configuration File
+### Credential Backend
 
-Config is stored at `~/.leetcode/config.json`:
+- Default backend: system keychain (`keytar`)
+- Explicit encrypted-file backend: set `LEETCODECLI_CREDENTIAL_BACKEND=file`
+- File backend requires `LEETCODECLI_MASTER_KEY`
+- Env read-only mode: set both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN`
 
-```json
-{
-  "credentials": {
-    "session": "...",
-    "csrfToken": "..."
-  },
-  "config": {
-    "language": "java",
-    "editor": "code",
-    "workDir": "/path/to/leetcode",
-    "repo": "https://github.com/username/leetcode-solutions.git"
-  }
-}
+If both env vars are present, the CLI uses them directly and `login/logout` run in read-only env mode.
+
+Windows (PowerShell) quick setup:
+
+```powershell
+$env:LEETCODECLI_CREDENTIAL_BACKEND = "keychain"
+# or encrypted file backend:
+# $env:LEETCODECLI_CREDENTIAL_BACKEND = "file"
+# $env:LEETCODECLI_MASTER_KEY = "<your_master_key>"
 ```
+
+### Config File
+
+Workspace config is stored at:
+
+- `~/.leetcode/workspaces/<name>/config.json`
 
 ## Requirements
 
@@ -532,7 +537,7 @@ You can run the CLI using Docker without installing Node.js.
      -v "$HOME/.leetcode:/root/.leetcode" \
      leetcode-cli list
    ```
-   _Note: We mount `~/.leetcode` to persist login credentials and `leetcode` folder to save solution files._
+   _Note: We mount `~/.leetcode` to persist CLI data (workspace config, snapshots, optional file-backend credentials) and `leetcode` folder to save solution files._
 
 ## License
 
