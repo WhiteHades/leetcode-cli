@@ -17,7 +17,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
 
   // If no options provided, show current config
   if (!options.lang && !options.editor && !options.workdir && !hasRepoOption) {
-    showCurrentConfig();
+    await showCurrentConfig();
     return;
   }
 
@@ -102,12 +102,12 @@ export async function configInteractiveCommand(): Promise<void> {
 
   console.log();
   console.log(chalk.green('✓ Configuration saved'));
-  showCurrentConfig();
+  await showCurrentConfig();
 }
 
-function showCurrentConfig(): void {
+async function showCurrentConfig(): Promise<void> {
   const currentConfig = config.getConfig();
-  const creds = credentials.get();
+  const creds = await credentials.get();
   const workspace = config.getActiveWorkspace();
 
   console.log();

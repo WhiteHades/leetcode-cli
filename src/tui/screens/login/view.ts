@@ -40,7 +40,9 @@ export function view(model: LoginScreenModel, width: number, height: number): st
         ' and ' +
         chalk.bold.cyan('csrftoken'),
       '',
-      'Note: These credentials are stored locally on your machine.',
+      'Default storage: system keychain.',
+      'Use LEETCODECLI_CREDENTIAL_BACKEND=file + LEETCODECLI_MASTER_KEY for encrypted file mode.',
+      'If LEETCODE_SESSION and LEETCODE_CSRF_TOKEN are set, login runs in read-only env mode.',
     ];
 
     const boxed = box(instructions, contentWidth, {

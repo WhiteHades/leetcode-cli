@@ -36,13 +36,47 @@ export function createMockCredentialsStorage() {
   let storedCredentials: typeof mockCredentials | null = mockCredentials;
 
   return {
-    get: vi.fn(() => storedCredentials),
+    get: vi.fn(async () => storedCredentials),
     set: vi.fn((creds) => {
       storedCredentials = creds;
+      return Promise.resolve({
+        ok: true,
+        reason: null,
+        mode: 'keychain',
+        source: 'keychain',
+        path: null,
+        message: 'saved',
+      });
     }),
     clear: vi.fn(() => {
       storedCredentials = null;
+      return Promise.resolve({
+        ok: true,
+        reason: null,
+        mode: 'keychain',
+        source: 'keychain',
+        path: null,
+        message: 'cleared',
+      });
     }),
+    status: vi.fn(async () => ({
+      mode: 'keychain',
+      backend: 'keychain',
+      source: storedCredentials ? 'keychain' : null,
+      hasCredentials: !!storedCredentials,
+      readOnly: false,
+      reason: null,
+      path: null,
+    })),
+    info: vi.fn(async () => ({
+      mode: 'keychain',
+      backend: 'keychain',
+      source: storedCredentials ? 'keychain' : null,
+      hasCredentials: !!storedCredentials,
+      readOnly: false,
+      reason: null,
+      path: null,
+    })),
     getPath: vi.fn().mockReturnValue('/tmp/.leetcode/credentials.json'),
   };
 }

@@ -1,10 +1,11 @@
-// Authentication utilities
 import chalk from 'chalk';
 import { leetcodeClient } from '../api/client.js';
-import { credentials } from '../storage/credentials.js';
+import * as credentialStore from '../storage/credentials.js';
+
+const { credentials } = credentialStore;
 
 export async function validateSession(): Promise<boolean> {
-  const creds = credentials.get();
+  const creds = await credentials.get();
   if (!creds) return false;
 
   try {
@@ -17,10 +18,19 @@ export async function validateSession(): Promise<boolean> {
 }
 
 export async function requireAuth(): Promise<{ authorized: boolean; username?: string }> {
-  const creds = credentials.get();
+  const creds = await credentials.get();
 
   if (!creds) {
-    console.log(chalk.yellow('⚠️  Please login first: leetcode login'));
+    try {
+      const status = await credentials.status();
+      const message =
+        typeof credentialStore.describeCredentialStatus === 'function'
+          ? credentialStore.describeCredentialStatus(status)
+          : 'Please login first: leetcode login';
+      console.log(chalk.yellow(`⚠️  ${message}`));
+    } catch {
+      console.log(chalk.yellow('⚠️  Please login first: leetcode login'));
+    }
     return { authorized: false };
   }
 
@@ -40,8 +50,8 @@ export async function requireAuth(): Promise<{ authorized: boolean; username?: s
   }
 }
 
-export function setupClientIfLoggedIn(): boolean {
-  const creds = credentials.get();
+export async function setupClientIfLoggedIn(): Promise<boolean> {
+  const creds = await credentials.get();
 
   if (!creds) {
     return false;
@@ -52,7 +62,7 @@ export function setupClientIfLoggedIn(): boolean {
 }
 
 export async function getCurrentUsername(): Promise<string | null> {
-  const creds = credentials.get();
+  const creds = await credentials.get();
   if (!creds) return null;
 
   try {

@@ -1,6 +1,6 @@
 import type { Command, AppMsg, ProblemListFilters } from '../types.js';
 import { leetcodeClient } from '../../api/client.js';
-import { credentials } from '../../storage/credentials.js';
+import * as credentialStore from '../../storage/credentials.js';
 import { config } from '../../storage/config.js';
 import {
   getCodeTemplate,
@@ -21,6 +21,7 @@ const RELEASES_URL =
   'https://raw.githubusercontent.com/night-slayer18/leetcode-cli/main/docs/releases.md';
 
 type Dispatch = (msg: AppMsg) => void;
+const { credentials } = credentialStore;
 
 let timerInterval: NodeJS.Timeout | null = null;
 
@@ -127,8 +128,16 @@ export function executeCommand(cmd: Command, dispatch: Dispatch): void {
 }
 
 async function checkAuth(dispatch: Dispatch): Promise<void> {
-  const creds = credentials.get();
+  const creds = await credentials.get();
   if (!creds) {
+    const status = await credentials.status();
+    if (status.reason) {
+      const message =
+        typeof credentialStore.describeCredentialStatus === 'function'
+          ? credentialStore.describeCredentialStatus(status)
+          : 'Authentication is not configured.';
+      dispatch({ type: 'GLOBAL_ERROR', error: message });
+    }
     dispatch({ type: 'AUTH_CHECK_COMPLETE', user: null });
     return;
   }
@@ -155,7 +164,7 @@ async function fetchProblems(
   dispatch({ type: 'LIST_FETCH_START' });
 
   try {
-    const creds = credentials.get();
+    const creds = await credentials.get();
     if (creds) leetcodeClient.setCredentials(creds);
 
     const result = await leetcodeClient.getProblems(filters);
@@ -197,7 +206,7 @@ async function fetchStats(dispatch: Dispatch): Promise<void> {
   dispatch({ type: 'STATS_FETCH_START' });
 
   try {
-    const creds = credentials.get();
+    const creds = await credentials.get();
     if (!creds) {
       throw new Error('You must be logged in to view stats');
     }
@@ -525,24 +534,48 @@ export function shutdownEffects(): void {
   }
 }
 
-function logout(dispatch: Dispatch): void {
-  credentials.clear();
-
+async function logout(dispatch: Dispatch): Promise<void> {
+  const result = await credentials.clear();
+  if (!result.ok) {
+    dispatch({ type: 'GLOBAL_ERROR', error: result.message });
+    return;
+  }
   dispatch({ type: 'AUTH_CHECK_COMPLETE', user: null });
 }
 
 async function login(session: string, csrf: string, dispatch: Dispatch): Promise<void> {
+  const credentialStatus = await credentials.status();
+  if (credentialStatus.mode === 'env-readonly') {
+    dispatch({
+      type: 'LOGIN_ERROR',
+      error:
+        'Environment credential mode is read-only. Unset LEETCODE_SESSION and LEETCODE_CSRF_TOKEN to use interactive login.',
+    });
+    return;
+  }
+  if (credentialStatus.mode === 'keychain' && credentialStatus.reason === 'KEYCHAIN_UNAVAILABLE') {
+    dispatch({
+      type: 'LOGIN_ERROR',
+      error:
+        'System keychain is unavailable. Use LEETCODE_SESSION and LEETCODE_CSRF_TOKEN in headless environments.',
+    });
+    return;
+  }
+
   const creds = { session, csrfToken: csrf };
   leetcodeClient.setCredentials(creds);
 
   try {
-    const status = await leetcodeClient.checkAuth();
-    if (status.isSignedIn && status.username) {
-      credentials.set(creds);
-      dispatch({ type: 'LOGIN_SUCCESS', username: status.username });
-      // Also update global app state
+    const authStatus = await leetcodeClient.checkAuth();
+    if (authStatus.isSignedIn && authStatus.username) {
+      const result = await credentials.set(creds);
+      if (!result.ok) {
+        dispatch({ type: 'LOGIN_ERROR', error: result.message });
+        return;
+      }
+      dispatch({ type: 'LOGIN_SUCCESS', username: authStatus.username });
       setTimeout(() => {
-        dispatch({ type: 'AUTH_CHECK_COMPLETE', user: { username: status.username! } });
+        dispatch({ type: 'AUTH_CHECK_COMPLETE', user: { username: authStatus.username! } });
       }, 1000);
     } else {
       dispatch({
