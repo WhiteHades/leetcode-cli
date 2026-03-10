@@ -58,7 +58,7 @@ function loadMeta(problemId: string): SnapshotMeta {
 
 function saveMeta(problemId: string, meta: SnapshotMeta): void {
   ensureSnapshotDir(problemId);
-  writeFileSync(getMetaPath(problemId), JSON.stringify(meta, null, 2));
+  writeFileSync(getMetaPath(problemId), JSON.stringify(meta, null, 2) + '\n');
 }
 
 export const snapshotStorage = {

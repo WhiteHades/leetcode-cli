@@ -35,7 +35,7 @@ function loadRegistry(): WorkspaceRegistry {
 
 function saveRegistry(registry: WorkspaceRegistry): void {
   ensureDir(LEETCODE_DIR);
-  writeFileSync(WORKSPACES_FILE, JSON.stringify(registry, null, 2));
+  writeFileSync(WORKSPACES_FILE, JSON.stringify(registry, null, 2) + '\n');
 }
 
 function normalizeWorkspaceName(name: string): string | null {
@@ -154,14 +154,14 @@ export const workspaceStorage = {
 
     // Write config
     const configPath = join(wsDir, 'config.json');
-    writeFileSync(configPath, JSON.stringify(config, null, 2));
+    writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
 
     // Initialize empty timer and collab
     writeFileSync(
       join(wsDir, 'timer.json'),
-      JSON.stringify({ solveTimes: {}, activeTimer: null }, null, 2)
+      JSON.stringify({ solveTimes: {}, activeTimer: null }, null, 2) + '\n'
     );
-    writeFileSync(join(wsDir, 'collab.json'), JSON.stringify({ session: null }, null, 2));
+    writeFileSync(join(wsDir, 'collab.json'), JSON.stringify({ session: null }, null, 2) + '\n');
 
     // Update registry
     registry.workspaces.push(wsName);
@@ -233,7 +233,7 @@ export const workspaceStorage = {
     const currentConfig = this.getConfig(wsName);
     const newConfig = { ...currentConfig, ...config };
 
-    writeFileSync(join(wsDir, 'config.json'), JSON.stringify(newConfig, null, 2));
+    writeFileSync(join(wsDir, 'config.json'), JSON.stringify(newConfig, null, 2) + '\n');
   },
 
   /**
