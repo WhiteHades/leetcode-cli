@@ -32,7 +32,7 @@ function loadCache(): VersionCache | null {
 
 function saveCache(cache: VersionCache): void {
   ensureDir();
-  writeFileSync(VERSION_FILE, JSON.stringify(cache, null, 2));
+  writeFileSync(VERSION_FILE, JSON.stringify(cache, null, 2) + '\n');
 }
 
 export const versionStorage = {

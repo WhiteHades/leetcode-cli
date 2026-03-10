@@ -41,7 +41,7 @@ function saveTimer(data: TimerSchema): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(timerPath, JSON.stringify(data, null, 2));
+  writeFileSync(timerPath, JSON.stringify(data, null, 2) + '\n');
 }
 
 export const timerStorage = {

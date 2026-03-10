@@ -32,7 +32,7 @@ function saveCollab(data: CollabSchema): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(collabPath, JSON.stringify(data, null, 2));
+  writeFileSync(collabPath, JSON.stringify(data, null, 2) + '\n');
 }
 
 export const collabStorage = {
