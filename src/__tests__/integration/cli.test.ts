@@ -172,6 +172,7 @@ describe('CLI Integration Tests', () => {
       const { stdout } = runCLI(['config', '--help']);
       expect(stdout).toContain('config');
       expect(stdout).toContain('--lang');
+      expect(stdout).toContain('--site');
       expect(stdout).toContain('--editor');
     });
 

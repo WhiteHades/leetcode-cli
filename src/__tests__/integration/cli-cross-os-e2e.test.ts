@@ -64,6 +64,8 @@ describe('CLI Cross-OS E2E', () => {
       'config',
       '--lang',
       'sql',
+      '--site',
+      'leetcode.cn',
       '--workdir',
       sharedWorkDir,
       '--editor',
@@ -76,6 +78,8 @@ describe('CLI Cross-OS E2E', () => {
     expect(showConfig.exitCode).toBe(0);
     expect(showConfig.stdout.toLowerCase()).toContain('language:');
     expect(showConfig.stdout.toLowerCase()).toContain('sql');
+    expect(showConfig.stdout.toLowerCase()).toContain('site:');
+    expect(showConfig.stdout.toLowerCase()).toContain('leetcode.cn');
     expect(showConfig.stdout).toContain(sharedWorkDir);
   });
 
@@ -123,9 +127,10 @@ describe('CLI Cross-OS E2E', () => {
     expect(diff.stdout.toLowerCase()).toContain('diff');
   });
 
-  it('should show sql in config help for built CLI', () => {
+  it('should show sql and site options in config help for built CLI', () => {
     const help = runCLI(['config', '--help']);
     expect(help.exitCode).toBe(0);
     expect(help.stdout.toLowerCase()).toContain('sql');
+    expect(help.stdout).toContain('--site');
   });
 });
