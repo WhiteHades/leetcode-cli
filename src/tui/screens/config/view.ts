@@ -12,6 +12,7 @@ import { colors, borders, icons } from '../../theme.js';
 
 const EXAMPLES: Record<string, string> = {
   language: 'Example: typescript, python3, cpp, sql',
+  site: 'Example: leetcode.com or leetcode.cn',
   editor: 'Example: code, vim, nvim',
   workdir: 'Example: /Users/name/leetcode',
   repo: 'Example: https://github.com/user/leetcode.git',
@@ -91,7 +92,7 @@ function renderOptionDetails(model: ConfigScreenModel, width: number): string[] 
   lines.push(chalk.hex(colors.textMuted)(truncate(EXAMPLES[option.id] || '', paneWidth - 2)));
   lines.push('');
 
-  if (option.id === 'language' || option.id === 'workdir') {
+  if (option.id === 'language' || option.id === 'workdir' || option.id === 'site') {
     lines.push(chalk.hex(colors.textMuted)('Validation: required'));
   } else {
     lines.push(chalk.hex(colors.textMuted)('Validation: optional'));

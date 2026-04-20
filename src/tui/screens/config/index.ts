@@ -1,6 +1,7 @@
 import type { ConfigScreenModel, ConfigMsg, Command } from '../../types.js';
 import { Cmd } from '../../types.js';
 import { config } from '../../../storage/config.js';
+import { DEFAULT_LEETCODE_SITE, normalizeLeetCodeSiteInput } from '../../../utils/site.js';
 
 type ConfigOption = ConfigScreenModel['options'][number];
 
@@ -11,6 +12,12 @@ function buildOptions(currentConfig: ReturnType<typeof config.getConfig>): Confi
       label: 'Default Language',
       description: 'Language for new solutions (example: typescript, python3, sql)',
       value: currentConfig.language,
+    },
+    {
+      id: 'site',
+      label: 'LeetCode Site',
+      description: 'Target site for API operations (leetcode.com or leetcode.cn)',
+      value: currentConfig.site || DEFAULT_LEETCODE_SITE,
     },
     {
       id: 'editor',
@@ -44,6 +51,9 @@ function validate(option: ConfigOption, value: string): string | null {
   }
   if (option.id === 'workdir' && !trimmed) {
     return 'Working directory cannot be empty';
+  }
+  if (option.id === 'site' && !normalizeLeetCodeSiteInput(trimmed)) {
+    return 'Site must be leetcode.com or leetcode.cn';
   }
   return null;
 }

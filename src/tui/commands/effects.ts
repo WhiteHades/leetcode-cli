@@ -16,6 +16,8 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { requestExit } from '../runtime.js';
 import got from 'got';
+import { configureLeetCodeClientSite } from '../../utils/auth.js';
+import { normalizeLeetCodeSiteInput } from '../../utils/site.js';
 
 const RELEASES_URL =
   'https://raw.githubusercontent.com/night-slayer18/leetcode-cli/main/docs/releases.md';
@@ -26,6 +28,8 @@ const { credentials } = credentialStore;
 let timerInterval: NodeJS.Timeout | null = null;
 
 export function executeCommand(cmd: Command, dispatch: Dispatch): void {
+  configureLeetCodeClientSite();
+
   switch (cmd.type) {
     case 'CMD_NONE':
       return;
@@ -242,6 +246,13 @@ function saveConfig(key: string, value: string): void {
     case 'language':
       config.setLanguage(value as any);
       break;
+    case 'site': {
+      const site = normalizeLeetCodeSiteInput(value);
+      if (site) {
+        config.setSite(site);
+      }
+      break;
+    }
     case 'editor':
       config.setEditor(value);
       break;
