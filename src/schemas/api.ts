@@ -51,6 +51,41 @@ export const DailyChallengeSchema = z.object({
   question: ProblemSchema,
 });
 
+export const CnDailyChallengeSchema = z.object({
+  todayRecord: z
+    .array(
+      z.object({
+        date: z.string().optional(),
+        link: z.string().optional(),
+        question: z
+          .object({
+            questionId: z.union([z.string(), z.number()]).optional(),
+            frontendQuestionId: z.union([z.string(), z.number()]).optional(),
+            questionFrontendId: z.union([z.string(), z.number()]).optional(),
+            difficulty: z.string().optional(),
+            title: z.string().optional(),
+            titleCn: z.string().optional(),
+            titleSlug: z.string().optional(),
+            paidOnly: z.boolean().optional(),
+            isPaidOnly: z.boolean().optional(),
+            acRate: z.union([z.number(), z.string()]).optional(),
+            status: z.union([z.literal('ac'), z.literal('notac'), z.null()]).optional(),
+            topicTags: z
+              .array(
+                z.object({
+                  name: z.string().optional(),
+                  nameTranslated: z.string().optional(),
+                  id: z.union([z.string(), z.number()]).optional(),
+                })
+              )
+              .optional(),
+          })
+          .optional(),
+      })
+    )
+    .optional(),
+});
+
 // --- Submission Schemas ---
 
 export const SubmissionSchema = z.object({
@@ -124,6 +159,66 @@ export const UserProfileSchema = z.object({
   }),
 });
 
+export const CnUserProfileSchema = z.object({
+  userProfilePublicProfile: z
+    .object({
+      siteRanking: z.number().optional(),
+      profile: z
+        .object({
+          userSlug: z.string().optional(),
+          realName: z.string().optional(),
+        })
+        .optional(),
+    })
+    .nullable()
+    .optional(),
+  userProfileUserQuestionProgress: z
+    .object({
+      numAcceptedQuestions: z
+        .array(
+          z.object({
+            difficulty: z.string().optional(),
+            count: z.number().optional(),
+          })
+        )
+        .optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
+export const CnSkillStatsSchema = z.object({
+  userProfilePublicProfile: z
+    .object({
+      profile: z
+        .object({
+          skillSet: z
+            .object({
+              topicAreaScores: z
+                .array(
+                  z.object({
+                    score: z.number().optional(),
+                    topicArea: z
+                      .object({
+                        name: z.string().optional(),
+                        slug: z.string().optional(),
+                      })
+                      .nullable()
+                      .optional(),
+                  })
+                )
+                .optional(),
+            })
+            .nullable()
+            .optional(),
+        })
+        .nullable()
+        .optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
 // --- User Status ---
 
 export const UserStatusSchema = z.object({
@@ -140,3 +235,6 @@ export type ValidatedSubmission = z.infer<typeof SubmissionSchema>;
 export type ValidatedSubmissionDetails = z.infer<typeof SubmissionDetailsSchema>;
 export type ValidatedTestResult = z.infer<typeof TestResultSchema>;
 export type ValidatedSubmissionResult = z.infer<typeof SubmissionResultSchema>;
+export type ValidatedCnDailyChallenge = z.infer<typeof CnDailyChallengeSchema>;
+export type ValidatedCnUserProfile = z.infer<typeof CnUserProfileSchema>;
+export type ValidatedCnSkillStats = z.infer<typeof CnSkillStatsSchema>;
