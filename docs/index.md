@@ -19,6 +19,7 @@ A modern, feature-rich command-line interface for LeetCode, built with TypeScrip
 ## Features
 
 - 🔐 Cookie-based authentication
+- 🌐 Site-aware API support (`leetcode.com` and `leetcode.cn`)
 - 📝 Auto-generation of solution files
 - 🧪 Local testing against sample cases
 - 📤 Direct submission to LeetCode

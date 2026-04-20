@@ -44,6 +44,7 @@ See [TUI Guide](tui.md) for complete behavior and screen-specific shortcuts.
 Login to LeetCode with browser cookies.
 
 Notes:
+- `leetcode login` lets you choose site (`leetcode.com` or `leetcode.cn`) before cookie input.
 - Default credential backend is system keychain.
 - Set `LEETCODECLI_CREDENTIAL_BACKEND=file` with `LEETCODECLI_MASTER_KEY` for encrypted file mode.
 - If both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN` are set, login runs in read-only env mode.
@@ -499,9 +500,10 @@ View or set configuration.
 **Options**:
 
 - `-l, --lang <language>` - Set default programming language
+- `-s, --site <site>` - Set LeetCode site (`leetcode.com` or `leetcode.cn`)
 - `-e, --editor <editor>` - Set editor command
 - `-w, --workdir <path>` - Set working directory for solutions
-- `-r, --repo <url>` - Set Git repository URL
+- `-r, --repo [url]` - Set or clear Git repository URL
 - `-i, --interactive` - Interactive configuration mode
 
 **Examples**:
@@ -515,6 +517,10 @@ leetcode config -l python3
 leetcode config --lang java
 leetcode config --lang sql
 
+# Set site
+leetcode config -s leetcode.com
+leetcode config --site leetcode.cn
+
 # Set editor
 leetcode config -e code
 leetcode config --editor vim
@@ -525,6 +531,7 @@ leetcode config --workdir /Users/you/projects/leetcode
 
 # Set Git repository
 leetcode config -r https://github.com/user/repo.git
+leetcode config --repo
 
 # Interactive configuration
 leetcode config -i
