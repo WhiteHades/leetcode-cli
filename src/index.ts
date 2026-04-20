@@ -89,7 +89,7 @@ program
     'after',
     `
 ${chalk.yellow('How to login:')}
-  1. Open ${chalk.cyan('https://leetcode.com')} in your browser
+  1. Run ${chalk.cyan('leetcode login')} and choose site (${chalk.cyan('leetcode.com')} or ${chalk.cyan('leetcode.cn')})
   2. Login to your account
   3. Open Developer Tools (F12) → Application → Cookies
   4. Copy values of ${chalk.green('LEETCODE_SESSION')} and ${chalk.green('csrftoken')}
@@ -402,6 +402,7 @@ program
   .command('config')
   .description('View or set configuration')
   .option('-l, --lang <language>', 'Set default programming language')
+  .option('-s, --site <site>', 'Set LeetCode site (leetcode.com or leetcode.cn)')
   .option('-e, --editor <editor>', 'Set editor command')
   .option('-w, --workdir <path>', 'Set working directory for solutions')
   .option('-r, --repo [url]', 'Set Git repository URL (omit value to clear)')
@@ -412,6 +413,7 @@ program
 ${chalk.yellow('Examples:')}
   ${chalk.cyan('$ leetcode config')}                  View current config
   ${chalk.cyan('$ leetcode config -l python3')}       Set language to Python
+  ${chalk.cyan('$ leetcode config -s leetcode.cn')}   Use LeetCode China site
   ${chalk.cyan('$ leetcode config -e "code"')}        Set editor to VS Code
   ${chalk.cyan('$ leetcode config -w ~/leetcode')}    Set solutions folder
   ${chalk.cyan('$ leetcode config -r https://...')}   Set git repository

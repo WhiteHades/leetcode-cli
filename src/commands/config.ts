@@ -4,24 +4,29 @@ import chalk from 'chalk';
 import { config } from '../storage/config.js';
 import { credentials } from '../storage/credentials.js';
 import { SUPPORTED_LANGUAGES, normalizeLanguageInput } from '../utils/languages.js';
+import {
+  DEFAULT_LEETCODE_SITE,
+  getLeetCodeSiteLabel,
+  normalizeLeetCodeSiteInput,
+  SUPPORTED_LEETCODE_SITES,
+} from '../utils/site.js';
 
 interface ConfigOptions {
   lang?: string;
   editor?: string;
   workdir?: string;
   repo?: string | boolean;
+  site?: string;
 }
 
 export async function configCommand(options: ConfigOptions): Promise<void> {
   const hasRepoOption = options.repo !== undefined;
 
-  // If no options provided, show current config
-  if (!options.lang && !options.editor && !options.workdir && !hasRepoOption) {
+  if (!options.lang && !options.editor && !options.workdir && !hasRepoOption && !options.site) {
     await showCurrentConfig();
     return;
   }
 
-  // Set options
   if (options.lang) {
     const normalizedLanguage = normalizeLanguageInput(options.lang);
     if (!normalizedLanguage) {
@@ -53,11 +58,24 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
       console.log(chalk.green(`✓ Repository URL set to ${options.repo}`));
     }
   }
+
+  if (options.site) {
+    const normalizedSite = normalizeLeetCodeSiteInput(options.site);
+    if (!normalizedSite) {
+      console.log(chalk.red(`Unsupported site: ${options.site}`));
+      console.log(chalk.gray(`Supported: ${SUPPORTED_LEETCODE_SITES.join(', ')}`));
+      return;
+    }
+
+    config.setSite(normalizedSite);
+    console.log(chalk.green(`✓ Site set to ${normalizedSite}`));
+  }
 }
 
 export async function configInteractiveCommand(): Promise<void> {
   const currentConfig = config.getConfig();
   const workspace = config.getActiveWorkspace();
+  const currentSite = normalizeLeetCodeSiteInput(currentConfig.site ?? '') ?? DEFAULT_LEETCODE_SITE;
 
   console.log();
   console.log(chalk.bold.cyan(`📁 Configuring workspace: ${workspace}`));
@@ -70,6 +88,16 @@ export async function configInteractiveCommand(): Promise<void> {
       message: 'Default programming language:',
       choices: SUPPORTED_LANGUAGES,
       default: currentConfig.language,
+    },
+    {
+      type: 'list',
+      name: 'site',
+      message: 'LeetCode site:',
+      choices: SUPPORTED_LEETCODE_SITES.map((site) => ({
+        name: getLeetCodeSiteLabel(site),
+        value: site,
+      })),
+      default: currentSite,
     },
     {
       type: 'input',
@@ -92,6 +120,7 @@ export async function configInteractiveCommand(): Promise<void> {
   ]);
 
   config.setLanguage(answers.language);
+  config.setSite(answers.site);
   config.setEditor(answers.editor);
   config.setWorkDir(answers.workDir);
   if (answers.repo) {
@@ -109,6 +138,7 @@ async function showCurrentConfig(): Promise<void> {
   const currentConfig = config.getConfig();
   const creds = await credentials.get();
   const workspace = config.getActiveWorkspace();
+  const site = normalizeLeetCodeSiteInput(currentConfig.site ?? '') ?? DEFAULT_LEETCODE_SITE;
 
   console.log();
   console.log(chalk.bold.cyan(`📁 Workspace: ${workspace}`));
@@ -117,6 +147,7 @@ async function showCurrentConfig(): Promise<void> {
   console.log(chalk.gray('Config file:'), config.getPath());
   console.log();
   console.log(chalk.gray('Language:    '), chalk.white(currentConfig.language));
+  console.log(chalk.gray('Site:        '), chalk.white(site));
   console.log(chalk.gray('Editor:      '), chalk.white(currentConfig.editor ?? '(not set)'));
   console.log(chalk.gray('Work Dir:    '), chalk.white(currentConfig.workDir));
   console.log(chalk.gray('Repo URL:    '), chalk.white(currentConfig.repo ?? '(not set)'));

@@ -3,14 +3,58 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { leetcodeClient } from '../api/client.js';
 import * as credentialStore from '../storage/credentials.js';
-import type { LeetCodeCredentials } from '../types.js';
+import type { LeetCodeCredentials, LeetCodeSite } from '../types.js';
+import { config } from '../storage/config.js';
+import {
+  DEFAULT_LEETCODE_SITE,
+  getLeetCodeSiteLabel,
+  normalizeLeetCodeSiteInput,
+  SUPPORTED_LEETCODE_SITES,
+} from '../utils/site.js';
+import { configureLeetCodeClientSite } from '../utils/auth.js';
 
 const { credentials } = credentialStore;
+
+function getConfiguredSite(): LeetCodeSite {
+  const configWithSite = config as unknown as {
+    getSite?: () => string;
+    getConfig?: () => { site?: string };
+  };
+
+  const fromGetter =
+    typeof configWithSite.getSite === 'function' ? configWithSite.getSite() : undefined;
+  if (typeof fromGetter === 'string') {
+    return normalizeLeetCodeSiteInput(fromGetter) ?? DEFAULT_LEETCODE_SITE;
+  }
+
+  const fromConfig = configWithSite.getConfig?.()?.site;
+  if (typeof fromConfig === 'string') {
+    return normalizeLeetCodeSiteInput(fromConfig) ?? DEFAULT_LEETCODE_SITE;
+  }
+
+  return DEFAULT_LEETCODE_SITE;
+}
+
+function persistConfiguredSite(site: LeetCodeSite): void {
+  const configWithSite = config as unknown as {
+    setSite?: (value: LeetCodeSite) => void;
+  };
+
+  if (typeof configWithSite.setSite === 'function') {
+    configWithSite.setSite(site);
+  }
+}
+
+function getDomainForSite(site: LeetCodeSite): string {
+  return site === 'leetcode.cn' ? 'leetcode.cn' : 'leetcode.com';
+}
 
 export async function loginCommand(): Promise<void> {
   const currentStatus = await credentials.status();
 
   if (currentStatus.mode === 'env-readonly') {
+    configureLeetCodeClientSite();
+
     const envCreds = await credentials.get();
     if (!envCreds) {
       console.log(chalk.yellow('Environment credential mode is active but credentials are unavailable.'));
@@ -53,10 +97,33 @@ export async function loginCommand(): Promise<void> {
   console.log(chalk.cyan('LeetCode CLI Login'));
   console.log(chalk.gray('─'.repeat(40)));
   console.log();
-  console.log(chalk.yellow('To login, you need to provide your LeetCode session cookies.'));
-  console.log(chalk.gray('1. Open https://leetcode.com in your browser'));
+
+  const currentSite = getConfiguredSite();
+  const siteAnswer = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'site',
+      message: 'LeetCode site:',
+      choices: SUPPORTED_LEETCODE_SITES.map((site) => ({
+        name: getLeetCodeSiteLabel(site),
+        value: site,
+      })),
+      default: currentSite,
+    },
+  ]);
+
+  const selectedSite =
+    normalizeLeetCodeSiteInput(String(siteAnswer.site ?? currentSite)) ?? DEFAULT_LEETCODE_SITE;
+
+  persistConfiguredSite(selectedSite);
+  configureLeetCodeClientSite(selectedSite);
+
+  const domain = getDomainForSite(selectedSite);
+
+  console.log(chalk.yellow('To login, provide your LeetCode session cookies.'));
+  console.log(chalk.gray(`1. Open https://${domain} in your browser`));
   console.log(chalk.gray('2. Login to your account'));
-  console.log(chalk.gray('3. Open DevTools (F12) → Application → Cookies → leetcode.com'));
+  console.log(chalk.gray(`3. Open DevTools (F12) → Application → Cookies → ${domain}`));
   console.log(chalk.gray('4. Copy the values of LEETCODE_SESSION and csrftoken'));
   console.log();
 
@@ -101,7 +168,7 @@ export async function loginCommand(): Promise<void> {
       return;
     }
 
-    spinner.succeed(`Logged in as ${chalk.green(username)}`);
+    spinner.succeed(`Logged in to ${chalk.cyan(selectedSite)} as ${chalk.green(username)}`);
     console.log();
     if (result.source === 'keychain') {
       console.log(chalk.green('✓ Credentials saved to system keychain.'));
@@ -128,6 +195,8 @@ export async function logoutCommand(): Promise<void> {
 }
 
 export async function whoamiCommand(): Promise<void> {
+  configureLeetCodeClientSite();
+
   const creds = await credentials.get();
 
   if (!creds) {

@@ -15,6 +15,7 @@ export async function workspaceCurrentCommand(): Promise<void> {
   console.log(chalk.gray('─'.repeat(40)));
   console.log(`  workDir:  ${chalk.white(config.workDir)}`);
   console.log(`  lang:     ${chalk.white(config.lang)}`);
+  console.log(`  site:     ${chalk.white(config.site ?? 'leetcode.com')}`);
   if (config.editor) console.log(`  editor:   ${chalk.white(config.editor)}`);
   if (config.syncRepo) console.log(`  syncRepo: ${chalk.white(config.syncRepo)}`);
   console.log();
@@ -33,7 +34,7 @@ export async function workspaceListCommand(): Promise<void> {
     const marker = ws === active ? chalk.green('▸ ') : '  ';
     const name = ws === active ? chalk.green.bold(ws) : ws;
     console.log(`${marker}${name}`);
-    console.log(`    ${chalk.gray(config.workDir)}`);
+    console.log(`    ${chalk.gray(config.workDir)} ${chalk.gray(`(${config.site ?? 'leetcode.com'})`)}`);
   }
   console.log();
 }
@@ -59,6 +60,7 @@ export async function workspaceCreateCommand(
   const config: WorkspaceConfig = {
     workDir,
     lang: 'typescript',
+    site: 'leetcode.com',
   };
 
   const success = workspaceStorage.create(workspaceName, config);
