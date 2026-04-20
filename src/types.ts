@@ -83,8 +83,8 @@ export interface SubmissionResult {
   total_testcases: number;
   status_runtime: string;
   status_memory: string;
-  runtime_percentile: number;
-  memory_percentile: number;
+  runtime_percentile: number | null;
+  memory_percentile: number | null;
   code_output?: string;
   std_output?: string;
   expected_output?: string;
