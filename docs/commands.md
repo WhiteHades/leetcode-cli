@@ -865,7 +865,7 @@ leetcode update --force
 
 ```
 ╭──────────────────────────────────────────────────────────╮
-│  🚀 Update available: 2.0.1 → 3.0.0                      │
+│  🚀 Update available: 2.0.1 → 3.0.1                      │
 │                                                          │
 │  ⚠️  This update contains breaking changes!              │
 │  Run: leetcode changelog to review changes               │

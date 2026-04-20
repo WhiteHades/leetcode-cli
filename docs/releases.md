@@ -1,5 +1,23 @@
 # Release Notes
 
+## v3.0.1
+
+> **Release Date**: 2026-04-20
+> **Focus**: Submission Parsing Hotfix + Dependency Security Patch
+
+### 🐛 Hotfixes
+
+- Fixed submission-result parsing when LeetCode returns `runtime_percentile` and `memory_percentile` as `null` for non-accepted submissions.
+- Prevented false `Submission check failed` schema errors and restored expected wrong-answer style output in CLI/TUI submit flows.
+- Added regression coverage for nullable percentile payloads.
+
+### 🔒 Security
+
+- Ran `npm audit fix` and updated transitive dependencies.
+- Resolved reported advisories in the dependency graph (`npm audit` now reports `0 vulnerabilities`).
+
+---
+
 ## v3.0.0
 
 > **Release Date**: 2026-03-10
