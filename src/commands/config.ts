@@ -67,6 +67,28 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
       return;
     }
 
+    const currentSite = config.getSite();
+    if (currentSite !== normalizedSite) {
+      if (process.stdout.isTTY) {
+        const confirm = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'proceed',
+            message: chalk.yellow(`Warning: Switching sites will clear your credentials. Proceed?`),
+            default: false,
+          },
+        ]);
+        
+        if (!confirm.proceed) {
+          console.log(chalk.gray('Change aborted. Staying on ' + currentSite));
+          return;
+        }
+      }
+      
+      await credentials.clear();
+      console.log(chalk.yellow(`⚠️  Logged out — run "leetcode login" to authenticate with ${normalizedSite}.`));
+    }
+
     config.setSite(normalizedSite);
     console.log(chalk.green(`✓ Site set to ${normalizedSite}`));
   }
@@ -120,13 +142,35 @@ export async function configInteractiveCommand(): Promise<void> {
   ]);
 
   config.setLanguage(answers.language);
-  config.setSite(answers.site);
   config.setEditor(answers.editor);
   config.setWorkDir(answers.workDir);
   if (answers.repo) {
     config.setRepo(answers.repo);
   } else {
     config.deleteRepo();
+  }
+
+  if (answers.site !== currentSite) {
+    const confirm = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'proceed',
+        message: chalk.yellow(`Warning: Switching sites will clear your credentials. Proceed?`),
+        default: false,
+      },
+    ]);
+    
+    if (confirm.proceed) {
+      config.setSite(answers.site);
+      await credentials.clear();
+      console.log();
+      console.log(chalk.yellow(`⚠️  Logged out — run "leetcode login" to authenticate with ${answers.site}.`));
+    } else {
+      console.log();
+      console.log(chalk.gray('Site change aborted. Staying on ' + currentSite));
+    }
+  } else {
+    config.setSite(answers.site);
   }
 
   console.log();

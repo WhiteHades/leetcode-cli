@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import type { ConfigScreenModel } from '../../types.js';
 import {
+  keyHint,
   renderFooterHints,
   renderScreenTitle,
   renderSectionHeader,
@@ -110,6 +111,13 @@ function renderOptionDetails(model: ConfigScreenModel, width: number): string[] 
 }
 
 function renderFooter(model: ConfigScreenModel, width: number): string[] {
+  if (model.showSiteConfirm) {
+    return [
+      chalk.bgYellow.black(` Warning: Switching sites clears credentials. Proceed? `),
+      `${keyHint('Enter', 'Yes, logout & switch')}  ${keyHint('Esc', 'Cancel')}`,
+    ];
+  }
+
   return renderFooterHints(
     [
       { key: '↑/↓', label: model.paneFocus === 'list' ? 'Move option' : 'Move option' },

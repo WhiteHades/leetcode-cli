@@ -30,6 +30,7 @@ vi.mock('../../storage/config.js', () => ({
 vi.mock('../../storage/credentials.js', () => ({
   credentials: {
     get: vi.fn(() => ({ session: 'test', csrfToken: 'test' })),
+    clear: vi.fn(() => Promise.resolve({ ok: true })),
   },
 }));
 
@@ -39,6 +40,7 @@ vi.mock('inquirer', () => ({
       language: 'java',
       editor: 'vim',
       workDir: '/home/user/leetcode',
+      proceed: true,
     }),
   },
 }));

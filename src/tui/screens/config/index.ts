@@ -70,6 +70,8 @@ export function createInitialModel(): ConfigScreenModel {
     validationError: null,
     isDirty: false,
     config: currentConfig,
+    showSiteConfirm: false,
+    pendingSite: null,
   };
 }
 
@@ -87,29 +89,34 @@ function withSelectedOption(model: ConfigScreenModel, selectedOption: number): C
     isEditing: false,
     isDirty: false,
     validationError: null,
+    showSiteConfirm: false,
   };
 }
 
 export function update(msg: ConfigMsg, model: ConfigScreenModel): [ConfigScreenModel, Command] {
   switch (msg.type) {
     case 'CONFIG_OPTION_UP':
-      if (model.isEditing) return [model, Cmd.none()];
+      if (model.isEditing || model.showSiteConfirm) return [model, Cmd.none()];
       return [withSelectedOption(model, model.selectedOption - 1), Cmd.none()];
 
     case 'CONFIG_OPTION_DOWN':
-      if (model.isEditing) return [model, Cmd.none()];
+      if (model.isEditing || model.showSiteConfirm) return [model, Cmd.none()];
       return [withSelectedOption(model, model.selectedOption + 1), Cmd.none()];
 
     case 'CONFIG_FOCUS_LIST':
+      if (model.showSiteConfirm) return [model, Cmd.none()];
       return [{ ...model, paneFocus: 'list', isEditing: false, isDirty: false }, Cmd.none()];
 
     case 'CONFIG_FOCUS_EDITOR':
+      if (model.showSiteConfirm) return [model, Cmd.none()];
       return [{ ...model, paneFocus: 'editor' }, Cmd.none()];
 
     case 'CONFIG_TOGGLE_FOCUS':
+      if (model.showSiteConfirm) return [model, Cmd.none()];
       return [{ ...model, paneFocus: model.paneFocus === 'list' ? 'editor' : 'list' }, Cmd.none()];
 
     case 'CONFIG_EDIT_START': {
+      if (model.showSiteConfirm) return [model, Cmd.none()];
       const option = getSelectedOption(model);
       return [
         {
@@ -170,6 +177,18 @@ export function update(msg: ConfigMsg, model: ConfigScreenModel): [ConfigScreenM
         return [{ ...model, validationError: error }, Cmd.none()];
       }
 
+      if (option.id === 'site' && model.draftValue !== option.value) {
+        return [
+          {
+            ...model,
+            isEditing: false,
+            showSiteConfirm: true,
+            pendingSite: model.draftValue,
+          },
+          Cmd.none()
+        ];
+      }
+
       const newOptions = [...model.options];
       newOptions[model.selectedOption] = { ...option, value: model.draftValue };
 
@@ -182,6 +201,40 @@ export function update(msg: ConfigMsg, model: ConfigScreenModel): [ConfigScreenM
           validationError: null,
         },
         Cmd.saveConfig(option.id, model.draftValue),
+      ];
+    }
+
+    case 'CONFIG_SITE_CONFIRM': {
+      if (!model.showSiteConfirm || !model.pendingSite) return [model, Cmd.none()];
+      
+      const option = getSelectedOption(model);
+      const newOptions = [...model.options];
+      newOptions[model.selectedOption] = { ...option, value: model.pendingSite };
+
+      return [
+        {
+          ...model,
+          options: newOptions,
+          showSiteConfirm: false,
+          pendingSite: null,
+          draftValue: model.pendingSite,
+        },
+        Cmd.saveConfig(option.id, model.pendingSite),
+      ];
+    }
+
+    case 'CONFIG_SITE_CANCEL': {
+      if (!model.showSiteConfirm) return [model, Cmd.none()];
+      
+      const option = getSelectedOption(model);
+      return [
+        {
+          ...model,
+          showSiteConfirm: false,
+          pendingSite: null,
+          draftValue: option.value,
+        },
+        Cmd.none(),
       ];
     }
 

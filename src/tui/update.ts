@@ -769,7 +769,13 @@ function handleGenericKeyPress(model: AppModel, msg: AppMsg): [AppModel, Command
     const configModel = screenState.model as import('./types.js').ConfigScreenModel;
     let configMsg: import('./types.js').ConfigMsg | null = null;
 
-    if (configModel.isEditing) {
+    if (configModel.showSiteConfirm) {
+      if (key.name === 'y' || key.name === 'return' || key.name === 'enter') {
+        configMsg = { type: 'CONFIG_SITE_CONFIRM' };
+      } else if (key.name === 'n' || key.name === 'escape') {
+        configMsg = { type: 'CONFIG_SITE_CANCEL' };
+      }
+    } else if (configModel.isEditing) {
       if (key.name === 'escape') configMsg = { type: 'CONFIG_EDIT_CANCEL' };
       else if (key.name === 'return' || key.name === 'enter')
         configMsg = { type: 'CONFIG_EDIT_SAVE' };

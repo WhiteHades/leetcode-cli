@@ -249,7 +249,11 @@ function saveConfig(key: string, value: string): void {
     case 'site': {
       const site = normalizeLeetCodeSiteInput(value);
       if (site) {
+        const previousSite = config.getSite();
         config.setSite(site);
+        if (previousSite !== site) {
+          void credentials.clear();
+        }
       }
       break;
     }

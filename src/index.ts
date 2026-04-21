@@ -614,6 +614,7 @@ program.showHelpAfterError('(add --help for additional information)');
 // Check for updates on startup (non-blocking)
 const shouldCheckUpdates =
   process.argv.length > 2 &&
+  process.stdout.isTTY &&
   !['update', 'changelog', '--version', '-v', '--help', '-h'].includes(process.argv[2]);
 
 if (shouldCheckUpdates) {

@@ -127,6 +127,8 @@ export interface ConfigScreenModel {
   readonly validationError: string | null;
   readonly isDirty: boolean;
   readonly config: import('../types.js').UserConfig | null;
+  readonly showSiteConfirm: boolean;
+  readonly pendingSite: string | null;
 }
 
 export interface HelpScreenModel {
@@ -345,7 +347,9 @@ export type ConfigMsg =
   | { readonly type: 'CONFIG_EDIT_INPUT'; readonly char: string }
   | { readonly type: 'CONFIG_EDIT_BACKSPACE' }
   | { readonly type: 'CONFIG_EDIT_SAVE' }
-  | { readonly type: 'CONFIG_EDIT_CANCEL' };
+  | { readonly type: 'CONFIG_EDIT_CANCEL' }
+  | { readonly type: 'CONFIG_SITE_CONFIRM' }
+  | { readonly type: 'CONFIG_SITE_CANCEL' };
 
 export type HelpMsg =
   | { readonly type: 'HELP_SCROLL_UP' }
