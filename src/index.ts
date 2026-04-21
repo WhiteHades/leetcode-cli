@@ -94,6 +94,11 @@ ${chalk.yellow('How to login:')}
   3. Open Developer Tools (F12) → Application → Cookies
   4. Copy values of ${chalk.green('LEETCODE_SESSION')} and ${chalk.green('csrftoken')}
   5. Paste when prompted by this command
+
+${chalk.yellow('Storage Options:')}
+  ${chalk.cyan('1. System Keychain (Default):')} Securely stores credentials in your OS keychain.
+  ${chalk.cyan('2. Encrypted File:')} Export ${chalk.green('LEETCODECLI_CREDENTIAL_BACKEND=file')} (AES-256).
+  ${chalk.cyan('3. Environment Variables:')} Export ${chalk.green('LEETCODE_SESSION')} & ${chalk.green('LEETCODE_CSRF_TOKEN')}.
 `
   )
   .action(loginCommand);

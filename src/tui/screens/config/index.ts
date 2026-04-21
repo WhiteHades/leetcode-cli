@@ -219,7 +219,10 @@ export function update(msg: ConfigMsg, model: ConfigScreenModel): [ConfigScreenM
           pendingSite: null,
           draftValue: model.pendingSite,
         },
-        Cmd.saveConfig(option.id, model.pendingSite),
+        Cmd.batch(
+          Cmd.saveConfig(option.id, model.pendingSite),
+          Cmd.logout()
+        ),
       ];
     }
 
