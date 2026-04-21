@@ -123,7 +123,7 @@ export function executeCommand(cmd: Command, dispatch: Dispatch): void {
       return;
 
     case 'CMD_LOGIN':
-      login(cmd.session, cmd.csrf, dispatch);
+      login(cmd.session, cmd.csrf, cmd.site, dispatch);
       return;
 
     default:
@@ -554,7 +554,12 @@ async function logout(dispatch: Dispatch): Promise<void> {
   dispatch({ type: 'AUTH_CHECK_COMPLETE', user: null });
 }
 
-async function login(session: string, csrf: string, dispatch: Dispatch): Promise<void> {
+async function login(
+  session: string,
+  csrf: string,
+  site: import('../../types.js').LeetCodeSite,
+  dispatch: Dispatch
+): Promise<void> {
   const credentialStatus = await credentials.status();
   if (credentialStatus.mode === 'env-readonly') {
     dispatch({
@@ -572,6 +577,9 @@ async function login(session: string, csrf: string, dispatch: Dispatch): Promise
     });
     return;
   }
+
+  config.setSite(site);
+  configureLeetCodeClientSite(site);
 
   const creds = { session, csrfToken: csrf };
   leetcodeClient.setCredentials(creds);

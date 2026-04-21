@@ -86,6 +86,72 @@ export const CnDailyChallengeSchema = z.object({
     .optional(),
 });
 
+export const CnProblemListSchema = z.object({
+  problemsetQuestionList: z.object({
+    total: z.number(),
+    questions: z.array(
+      z.object({
+        frontendQuestionId: z.union([z.string(), z.number()]).optional(),
+        title: z.string().optional(),
+        titleCn: z.string().optional(),
+        titleSlug: z.string().optional(),
+        difficulty: z.string().optional(),
+        paidOnly: z.boolean().optional(),
+        acRate: z.union([z.number(), z.string()]).optional(),
+        status: z.string().nullable().optional(),
+        topicTags: z
+          .array(
+            z.object({
+              name: z.string().optional(),
+              nameTranslated: z.string().optional(),
+              id: z.union([z.string(), z.number()]).optional(),
+              slug: z.string().optional(),
+            })
+          )
+          .optional(),
+      })
+    ),
+  }),
+});
+
+export const CnProblemDetailSchema = z.object({
+  question: z.object({
+    questionId: z.union([z.string(), z.number()]).optional(),
+    questionFrontendId: z.union([z.string(), z.number()]).optional(),
+    title: z.string().optional(),
+    translatedTitle: z.string().optional(),
+    titleSlug: z.string().optional(),
+    translatedContent: z.string().nullable().optional(),
+    difficulty: z.string().optional(),
+    isPaidOnly: z.boolean().optional(),
+    acRate: z.union([z.number(), z.string()]).optional(),
+    status: z.string().nullable().optional(),
+    topicTags: z
+      .array(
+        z.object({
+          name: z.string().optional(),
+          slug: z.string().optional(),
+          translatedName: z.string().optional(),
+        })
+      )
+      .optional(),
+    codeSnippets: z
+      .array(
+        z.object({
+          lang: z.string(),
+          langSlug: z.string(),
+          code: z.string(),
+        })
+      )
+      .nullable()
+      .optional(),
+    sampleTestCase: z.string().optional(),
+    exampleTestcases: z.string().optional(),
+    hints: z.array(z.string()).optional(),
+    stats: z.string().optional(),
+  }),
+});
+
 // --- Submission Schemas ---
 
 export const SubmissionSchema = z.object({
@@ -236,5 +302,7 @@ export type ValidatedSubmissionDetails = z.infer<typeof SubmissionDetailsSchema>
 export type ValidatedTestResult = z.infer<typeof TestResultSchema>;
 export type ValidatedSubmissionResult = z.infer<typeof SubmissionResultSchema>;
 export type ValidatedCnDailyChallenge = z.infer<typeof CnDailyChallengeSchema>;
+export type ValidatedCnProblemList = z.infer<typeof CnProblemListSchema>;
+export type ValidatedCnProblemDetail = z.infer<typeof CnProblemDetailSchema>;
 export type ValidatedCnUserProfile = z.infer<typeof CnUserProfileSchema>;
 export type ValidatedCnSkillStats = z.infer<typeof CnSkillStatsSchema>;

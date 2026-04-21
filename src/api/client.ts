@@ -14,6 +14,8 @@ import type {
   TestResult,
 } from '../types.js';
 import {
+  CnProblemDetailSchema,
+  CnProblemListSchema,
   CnDailyChallengeSchema,
   CnSkillStatsSchema,
   CnUserProfileSchema,
@@ -29,7 +31,13 @@ import {
 } from '../schemas/api.js';
 import { getQueryPack } from './query-resolver.js';
 import type { QueryPack } from './queries.global.js';
-import { normalizeCnDailyChallenge, normalizeCnSkillStats, normalizeCnUserProfile } from './adapters/index.js';
+import {
+  normalizeCnDailyChallenge,
+  normalizeCnProblemDetail,
+  normalizeCnProblemList,
+  normalizeCnSkillStats,
+  normalizeCnUserProfile,
+} from './adapters/index.js';
 
 const BASE_URLS: Record<LeetCodeSite, string> = {
   'leetcode.com': 'https://leetcode.com',
@@ -218,6 +226,12 @@ export class LeetCodeClient {
       (variables.filters as Record<string, unknown>).searchKeywords = filters.searchKeywords;
     }
 
+    if (this.site === 'leetcode.cn') {
+      const data = await this.graphql<unknown>('PROBLEM_LIST', this.queries.PROBLEM_LIST_QUERY, variables);
+      const validated = CnProblemListSchema.parse(data);
+      return normalizeCnProblemList(validated);
+    }
+
     const data = await this.graphql<{
       problemsetQuestionList: { total: number; questions: Problem[] };
     }>('PROBLEM_LIST', this.queries.PROBLEM_LIST_QUERY, variables);
@@ -231,6 +245,14 @@ export class LeetCodeClient {
   }
 
   async getProblem(titleSlug: string): Promise<ProblemDetail> {
+    if (this.site === 'leetcode.cn') {
+      const data = await this.graphql<unknown>('PROBLEM_DETAIL', this.queries.PROBLEM_DETAIL_QUERY, {
+        titleSlug,
+      });
+      const validated = CnProblemDetailSchema.parse(data);
+      return normalizeCnProblemDetail(validated);
+    }
+
     const data = await this.graphql<{ question: ProblemDetail }>('PROBLEM_DETAIL', this.queries.PROBLEM_DETAIL_QUERY, {
       titleSlug,
     });
@@ -240,6 +262,26 @@ export class LeetCodeClient {
   }
 
   async getProblemById(id: string): Promise<ProblemDetail> {
+    if (this.site === 'leetcode.cn') {
+      const limit = 50;
+      let skip = 0;
+      let total = 0;
+      let problem: Problem | undefined;
+
+      do {
+        const result = await this.getProblems({ searchKeywords: id, limit, skip });
+        total = result.total;
+        problem = result.problems.find((p) => p.questionFrontendId === id);
+        skip += limit;
+      } while (!problem && skip < total);
+
+      if (!problem) {
+        throw new Error(`Problem #${id} not found`);
+      }
+
+      return this.getProblem(problem.titleSlug);
+    }
+
     const { problems } = await this.getProblems({ searchKeywords: id, limit: 10 });
     const problem = problems.find((p) => p.questionFrontendId === id);
 

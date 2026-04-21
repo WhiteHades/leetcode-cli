@@ -172,6 +172,16 @@ describe('Solve Commands', () => {
         // Should warn about existing file but not fail
         expect(leetcodeClient.getProblemById).toHaveBeenCalled();
       });
+
+      it('should not create a file when problem id lookup fails', async () => {
+        vi.mocked(existsSync).mockReturnValue(false);
+        vi.mocked(leetcodeClient.getProblemById).mockRejectedValueOnce(new Error('Problem #1 not found'));
+
+        const result = await pickCommand('1', { open: false });
+
+        expect(result).toBe(false);
+        expect(writeFile).not.toHaveBeenCalled();
+      });
     });
 
     describe('file creation', () => {

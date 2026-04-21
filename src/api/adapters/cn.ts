@@ -1,4 +1,4 @@
-import type { DailyChallenge, Problem } from '../../types.js';
+import type { DailyChallenge, Problem, ProblemDetail } from '../../types.js';
 
 interface CnTopicTag {
   name?: string;
@@ -17,8 +17,47 @@ interface CnQuestion {
   paidOnly?: boolean;
   isPaidOnly?: boolean;
   acRate?: number | string;
-  status?: 'ac' | 'notac' | null;
+  status?: string | null;
   topicTags?: CnTopicTag[];
+}
+
+interface CnProblemListItem {
+  frontendQuestionId?: string | number;
+  title?: string;
+  titleCn?: string;
+  titleSlug?: string;
+  difficulty?: string;
+  paidOnly?: boolean;
+  acRate?: number | string;
+  status?: string | null;
+  topicTags?: Array<CnTopicTag & { slug?: string }>;
+}
+
+interface CnProblemDetailTag {
+  name?: string;
+  slug?: string;
+  translatedName?: string;
+}
+
+interface CnProblemDetailShape {
+  question: {
+    questionId?: string | number;
+    questionFrontendId?: string | number;
+    title?: string;
+    translatedTitle?: string;
+    titleSlug?: string;
+    translatedContent?: string | null;
+    difficulty?: string;
+    isPaidOnly?: boolean;
+    acRate?: number | string;
+    status?: string | null;
+    topicTags?: CnProblemDetailTag[];
+    codeSnippets?: Array<{ lang: string; langSlug: string; code: string }> | null;
+    sampleTestCase?: string;
+    exampleTestcases?: string;
+    hints?: string[];
+    stats?: string;
+  };
 }
 
 interface CnDailyRecord {
@@ -71,7 +110,10 @@ function toTitleCaseDifficulty(difficulty?: string): Problem['difficulty'] {
 }
 
 function toStatus(status: string | null | undefined): Problem['status'] {
-  if (status === 'ac' || status === 'notac') return status;
+  const value = (status ?? '').toLowerCase();
+  if (value === 'ac') return 'ac';
+  if (value === 'notac' || value === 'tried') return 'notac';
+  if (value === 'not_started') return null;
   return null;
 }
 
@@ -107,6 +149,30 @@ function toProblem(question: CnQuestion): Problem {
   };
 }
 
+function toProblemFromListEntry(question: CnProblemListItem): Problem {
+  const title = question.titleCn || question.title || 'Unknown Problem';
+  const titleSlug = question.titleSlug || toSlug(title);
+  const tags = (question.topicTags ?? []).map((tag) => {
+    const tagName = tag.nameTranslated || tag.name || 'Tag';
+    return {
+      name: tagName,
+      slug: tag.slug || (tag.id !== undefined ? String(tag.id) : toSlug(tagName)),
+    };
+  });
+
+  return {
+    questionId: String(question.frontendQuestionId ?? ''),
+    questionFrontendId: String(question.frontendQuestionId ?? ''),
+    title,
+    titleSlug,
+    difficulty: toTitleCaseDifficulty(question.difficulty),
+    isPaidOnly: Boolean(question.paidOnly),
+    acRate: Number(question.acRate ?? 0),
+    topicTags: tags,
+    status: toStatus(question.status),
+  };
+}
+
 export function normalizeCnDailyChallenge(input: { todayRecord?: CnDailyRecord[] }): DailyChallenge {
   const record = input.todayRecord?.[0];
   if (!record || !record.question) {
@@ -119,6 +185,44 @@ export function normalizeCnDailyChallenge(input: { todayRecord?: CnDailyRecord[]
     date: record.date ?? new Date().toISOString().slice(0, 10),
     link: record.link || `/problems/${problem.titleSlug}/`,
     question: problem,
+  };
+}
+
+export function normalizeCnProblemList(input: {
+  problemsetQuestionList: { total: number; questions: CnProblemListItem[] };
+}): { total: number; problems: Problem[] } {
+  return {
+    total: input.problemsetQuestionList.total,
+    problems: input.problemsetQuestionList.questions.map((question) => toProblemFromListEntry(question)),
+  };
+}
+
+export function normalizeCnProblemDetail(input: CnProblemDetailShape): ProblemDetail {
+  const question = input.question;
+  const title = question.translatedTitle || question.title || 'Unknown Problem';
+  const titleSlug = question.titleSlug || toSlug(title);
+  const topicTags = (question.topicTags ?? []).map((tag) => ({
+    name: tag.translatedName || tag.name || 'Tag',
+    slug: tag.slug || toSlug(tag.translatedName || tag.name || 'tag'),
+  }));
+
+  return {
+    questionId: String(question.questionId ?? ''),
+    questionFrontendId: String(question.questionFrontendId ?? ''),
+    title,
+    titleSlug,
+    content: question.translatedContent ?? null,
+    difficulty: toTitleCaseDifficulty(question.difficulty),
+    isPaidOnly: Boolean(question.isPaidOnly),
+    acRate: Number(question.acRate ?? 0),
+    topicTags,
+    codeSnippets: question.codeSnippets ?? null,
+    sampleTestCase: question.sampleTestCase ?? '',
+    exampleTestcases: question.exampleTestcases ?? '',
+    hints: question.hints ?? [],
+    companyTags: null,
+    stats: question.stats ?? '{}',
+    status: toStatus(question.status),
   };
 }
 

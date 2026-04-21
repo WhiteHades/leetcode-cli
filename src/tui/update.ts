@@ -127,13 +127,7 @@ export function update(msg: AppMsg, model: AppModel): [AppModel, Command] {
           user: null,
           screenState: {
             screen: 'login',
-            model: {
-              step: 'instructions',
-              sessionToken: '',
-              csrfToken: '',
-              focusedField: 'session',
-              error: null,
-            },
+            model: LoginScreen.init()[0],
           },
           needsRender: true,
         },
@@ -972,6 +966,14 @@ function handleLoginKeyPress(model: AppModel, msg: AppMsg): [AppModel, Command] 
       return updateLogin(model, { type: 'LOGIN_SUBMIT' });
     } else if (key.name === 'escape') {
       return [model, Cmd.exit()];
+    }
+  } else if (loginModel.step === 'site') {
+    if (key.name === 'escape') {
+      return updateLogin(model, { type: 'LOGIN_BACK' });
+    } else if (key.name === 'tab' || key.name === 'down' || key.name === 'up' || key.name === 'left' || key.name === 'right') {
+      return updateLogin(model, { type: 'LOGIN_SWITCH_SITE' });
+    } else if (key.name === 'return' || key.name === 'enter') {
+      return updateLogin(model, { type: 'LOGIN_SUBMIT' });
     }
   } else if (loginModel.step === 'input' || loginModel.step === 'error') {
     if (key.name === 'escape') {
