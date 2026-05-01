@@ -4,14 +4,15 @@
 
 The CLI requires your LeetCode authentication cookies.
 
-1. Login to [leetcode.com](https://leetcode.com).
-2. Open Browser DevTools (F12) -> Application -> Cookies.
-3. Find `LEETCODE_SESSION` and `csrftoken`.
-4. Run:
+1. Choose your site (`leetcode.com` or `leetcode.cn`).
+2. Login to that site in your browser.
+3. Open Browser DevTools (F12) -> Application -> Cookies.
+4. Find `LEETCODE_SESSION` and `csrftoken`.
+5. Run:
    ```bash
    leetcode login
    ```
-5. Paste the values.
+6. Paste the values.
 
 ## Credential Storage
 
@@ -69,6 +70,10 @@ leetcode config -l python3
 # Set SQL as default language
 leetcode config -l sql
 
+# Select LeetCode site
+leetcode config -s leetcode.com
+leetcode config -s leetcode.cn
+
 # Set default work directory
 leetcode config -w ~/Development/my-leetcode
 
@@ -86,6 +91,7 @@ Config is stored per-workspace in `~/.leetcode/workspaces/<name>/config.json`.
 | `editor`   | Command to open files (code, vim, nano)              |
 | `workDir`  | Directory where solution files are saved             |
 | `syncRepo` | Remote Git repository URL                            |
+| `site`     | LeetCode site (`leetcode.com` or `leetcode.cn`)      |
 
 ## Workspace-Aware Storage
 

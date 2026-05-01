@@ -16,6 +16,8 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { requestExit } from '../runtime.js';
 import got from 'got';
+import { configureLeetCodeClientSite } from '../../utils/auth.js';
+import { normalizeLeetCodeSiteInput } from '../../utils/site.js';
 
 const RELEASES_URL =
   'https://raw.githubusercontent.com/night-slayer18/leetcode-cli/main/docs/releases.md';
@@ -26,6 +28,8 @@ const { credentials } = credentialStore;
 let timerInterval: NodeJS.Timeout | null = null;
 
 export function executeCommand(cmd: Command, dispatch: Dispatch): void {
+  configureLeetCodeClientSite();
+
   switch (cmd.type) {
     case 'CMD_NONE':
       return;
@@ -119,7 +123,7 @@ export function executeCommand(cmd: Command, dispatch: Dispatch): void {
       return;
 
     case 'CMD_LOGIN':
-      login(cmd.session, cmd.csrf, dispatch);
+      login(cmd.session, cmd.csrf, cmd.site, dispatch);
       return;
 
     default:
@@ -242,6 +246,17 @@ function saveConfig(key: string, value: string): void {
     case 'language':
       config.setLanguage(value as any);
       break;
+    case 'site': {
+      const site = normalizeLeetCodeSiteInput(value);
+      if (site) {
+        const previousSite = config.getSite();
+        config.setSite(site);
+        if (previousSite !== site) {
+          void credentials.clear();
+        }
+      }
+      break;
+    }
     case 'editor':
       config.setEditor(value);
       break;
@@ -543,7 +558,12 @@ async function logout(dispatch: Dispatch): Promise<void> {
   dispatch({ type: 'AUTH_CHECK_COMPLETE', user: null });
 }
 
-async function login(session: string, csrf: string, dispatch: Dispatch): Promise<void> {
+async function login(
+  session: string,
+  csrf: string,
+  site: import('../../types.js').LeetCodeSite,
+  dispatch: Dispatch
+): Promise<void> {
   const credentialStatus = await credentials.status();
   if (credentialStatus.mode === 'env-readonly') {
     dispatch({
@@ -561,6 +581,9 @@ async function login(session: string, csrf: string, dispatch: Dispatch): Promise
     });
     return;
   }
+
+  config.setSite(site);
+  configureLeetCodeClientSite(site);
 
   const creds = { session, csrfToken: csrf };
   leetcodeClient.setCredentials(creds);

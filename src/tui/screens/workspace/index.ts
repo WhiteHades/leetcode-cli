@@ -250,6 +250,7 @@ export function update(
       const created = workspaceStorage.create(name, {
         workDir: '',
         lang: 'typescript',
+        site: 'leetcode.com',
       });
       if (!created) {
         return [{ ...model, error: 'Failed to create workspace' }, Cmd.none()];

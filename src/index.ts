@@ -67,7 +67,7 @@ program
   .name('leetcode')
   .usage('[command] [options]')
   .description(chalk.bold.cyan('🔥 A modern LeetCode CLI built with TypeScript'))
-  .version('3.0.1', '-v, --version', 'Output the version number')
+  .version('3.1.0', '-v, --version', 'Output the version number')
   .helpOption('-h, --help', 'Display help for command')
   .addHelpText(
     'after',
@@ -89,11 +89,16 @@ program
     'after',
     `
 ${chalk.yellow('How to login:')}
-  1. Open ${chalk.cyan('https://leetcode.com')} in your browser
+  1. Run ${chalk.cyan('leetcode login')} and choose site (${chalk.cyan('leetcode.com')} or ${chalk.cyan('leetcode.cn')})
   2. Login to your account
   3. Open Developer Tools (F12) → Application → Cookies
   4. Copy values of ${chalk.green('LEETCODE_SESSION')} and ${chalk.green('csrftoken')}
   5. Paste when prompted by this command
+
+${chalk.yellow('Storage Options:')}
+  ${chalk.cyan('1. System Keychain (Default):')} Securely stores credentials in your OS keychain.
+  ${chalk.cyan('2. Encrypted File:')} Export ${chalk.green('LEETCODECLI_CREDENTIAL_BACKEND=file')} (AES-256).
+  ${chalk.cyan('3. Environment Variables:')} Export ${chalk.green('LEETCODE_SESSION')} & ${chalk.green('LEETCODE_CSRF_TOKEN')}.
 `
   )
   .action(loginCommand);
@@ -402,6 +407,7 @@ program
   .command('config')
   .description('View or set configuration')
   .option('-l, --lang <language>', 'Set default programming language')
+  .option('-s, --site <site>', 'Set LeetCode site (leetcode.com or leetcode.cn)')
   .option('-e, --editor <editor>', 'Set editor command')
   .option('-w, --workdir <path>', 'Set working directory for solutions')
   .option('-r, --repo [url]', 'Set Git repository URL (omit value to clear)')
@@ -412,6 +418,7 @@ program
 ${chalk.yellow('Examples:')}
   ${chalk.cyan('$ leetcode config')}                  View current config
   ${chalk.cyan('$ leetcode config -l python3')}       Set language to Python
+  ${chalk.cyan('$ leetcode config -s leetcode.cn')}   Use LeetCode China site
   ${chalk.cyan('$ leetcode config -e "code"')}        Set editor to VS Code
   ${chalk.cyan('$ leetcode config -w ~/leetcode')}    Set solutions folder
   ${chalk.cyan('$ leetcode config -r https://...')}   Set git repository
@@ -612,6 +619,7 @@ program.showHelpAfterError('(add --help for additional information)');
 // Check for updates on startup (non-blocking)
 const shouldCheckUpdates =
   process.argv.length > 2 &&
+  process.stdout.isTTY &&
   !['update', 'changelog', '--version', '-v', '--help', '-h'].includes(process.argv[2]);
 
 if (shouldCheckUpdates) {

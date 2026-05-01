@@ -33,6 +33,13 @@ vi.mock('../../storage/credentials.js', () => ({
   }),
 }));
 
+vi.mock('../../storage/config.js', () => ({
+  config: {
+    getSite: vi.fn(() => 'leetcode.com'),
+    getConfig: vi.fn(() => ({ site: 'leetcode.com' })),
+  },
+}));
+
 vi.mock('../../api/client.js', () => ({
   leetcodeClient: mockLeetCodeClient,
 }));

@@ -32,13 +32,9 @@ export function view(model: LoginScreenModel, width: number, height: number): st
     const instructions = [
       chalk.hex(colors.warning).bold('How to Login:'),
       '',
-      '1. Open https://leetcode.com in your browser',
-      '2. Login to your account',
-      '3. Open DevTools (F12) → Application → Cookies → leetcode.com',
-      '4. Copy the values of ' +
-        chalk.bold.cyan('LEETCODE_SESSION') +
-        ' and ' +
-        chalk.bold.cyan('csrftoken'),
+      '1. Continue to choose your LeetCode site',
+      '2. We will show the correct cookie domain on the next screen',
+      '3. Copy the values of ' + chalk.bold.cyan('LEETCODE_SESSION') + ' and ' + chalk.bold.cyan('csrftoken'),
       '',
       'Default storage: system keychain.',
       'Use LEETCODECLI_CREDENTIAL_BACKEND=file + LEETCODECLI_MASTER_KEY for encrypted file mode.',
@@ -54,10 +50,34 @@ export function view(model: LoginScreenModel, width: number, height: number): st
 
     boxed.forEach((l) => contentLines.push(center(l, width)));
     contentLines.push(''); // Spacing
-    contentLines.push(center(keyHint('Enter', 'Continue to Login'), width));
+    contentLines.push(center(keyHint('Enter', 'Choose Site'), width));
+  } else if (model.step === 'site') {
+    const contentWidth = Math.max(28, Math.min(100, width - 4));
+    const options = [
+      model.site === 'leetcode.com'
+        ? chalk.hex(colors.primary)('> leetcode.com (Global)')
+        : '  leetcode.com (Global)',
+      model.site === 'leetcode.cn'
+        ? chalk.hex(colors.primary)('> leetcode.cn (China)')
+        : '  leetcode.cn (China)',
+      '',
+      chalk.gray('Use Up/Down/Tab to switch sites.'),
+    ];
+
+    const boxed = box(options, contentWidth, {
+      title: 'Choose Site',
+      borderColor: colors.primary,
+      padding: 1,
+      borderStyle: 'round',
+    });
+
+    boxed.forEach((l) => contentLines.push(center(l, width)));
+    contentLines.push('');
+    contentLines.push(center(keyHint('Enter', 'Continue') + '  ' + keyHint('Esc', 'Back'), width));
   } else if (model.step === 'input' || model.step === 'verifying' || model.step === 'error') {
     const contentWidth = Math.max(28, Math.min(100, width - 4));
     const boxLines = [];
+    const domain = model.site === 'leetcode.cn' ? 'leetcode.cn' : 'leetcode.com';
 
     const isSessionFocused = model.focusedField === 'session';
     const isCsrfFocused = model.focusedField === 'csrf';
@@ -95,6 +115,8 @@ export function view(model: LoginScreenModel, width: number, height: number): st
         : '  ' + csrfVal + (model.csrfToken ? chalk.green(' ✔') : '')
     );
 
+    boxLines.push('');
+    boxLines.push(chalk.gray(`Cookie source: https://${domain} → DevTools → Application → Cookies → ${domain}`));
     boxLines.push('');
     if (model.error) {
       boxLines.push(center(chalk.red(model.error), contentWidth - 4));

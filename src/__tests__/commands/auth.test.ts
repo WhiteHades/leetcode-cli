@@ -21,12 +21,25 @@ vi.mock('../../api/client.js', () => ({
   leetcodeClient: createMockLeetCodeClient(),
 }));
 
+vi.mock('../../storage/config.js', () => ({
+  config: {
+    getSite: vi.fn(() => 'leetcode.com'),
+    getConfig: vi.fn(() => ({ site: 'leetcode.com' })),
+    setSite: vi.fn(),
+  },
+}));
+
 // Mock inquirer for login prompts
 vi.mock('inquirer', () => ({
   default: {
-    prompt: vi.fn().mockResolvedValue({
-      session: 'test-session',
-      csrfToken: 'test-csrf',
+    prompt: vi.fn().mockImplementation((questions: Array<{ name: string }>) => {
+      if (questions.some((question) => question.name === 'site')) {
+        return Promise.resolve({ site: 'leetcode.com' });
+      }
+      return Promise.resolve({
+        session: 'test-session',
+        csrfToken: 'test-csrf',
+      });
     }),
   },
 }));
@@ -45,6 +58,7 @@ vi.mock('ora', () => ({
 import { loginCommand, logoutCommand, whoamiCommand } from '../../commands/login.js';
 import { credentials } from '../../storage/credentials.js';
 import { leetcodeClient } from '../../api/client.js';
+import { config } from '../../storage/config.js';
 
 describe('Authentication Commands', () => {
   beforeEach(() => {
@@ -60,6 +74,7 @@ describe('Authentication Commands', () => {
 
       await loginCommand();
 
+      expect(config.setSite).toHaveBeenCalledWith('leetcode.com');
       expect(credentials.set).toHaveBeenCalled();
     });
 

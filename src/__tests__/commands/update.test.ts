@@ -1,6 +1,22 @@
 // Update command tests - integration tests that hit real npm registry
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { outputContains } from '../setup.js';
+
+vi.mock('got', () => ({
+  default: () => ({
+    json: async () => ({ version: '999.0.0' }),
+  }),
+}));
+
+vi.mock('../../storage/version.js', () => ({
+  versionStorage: {
+    shouldCheck: vi.fn(() => true),
+    getCached: vi.fn(() => null),
+    updateCache: vi.fn(),
+    clearCache: vi.fn(),
+  },
+}));
+
 import { updateCommand } from '../../commands/update.js';
 import { versionStorage } from '../../storage/version.js';
 

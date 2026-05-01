@@ -4,6 +4,7 @@ import type {
   ProblemListFilters as RootProblemListFilters,
   DailyChallenge,
 } from '../types.js';
+import type { LeetCodeSite } from '../types.js';
 
 export type Problem = RootProblem;
 export type ProblemDetail = RootProblemDetail;
@@ -126,6 +127,8 @@ export interface ConfigScreenModel {
   readonly validationError: string | null;
   readonly isDirty: boolean;
   readonly config: import('../types.js').UserConfig | null;
+  readonly showSiteConfirm: boolean;
+  readonly pendingSite: string | null;
 }
 
 export interface HelpScreenModel {
@@ -133,7 +136,8 @@ export interface HelpScreenModel {
 }
 
 export interface LoginScreenModel {
-  readonly step: 'instructions' | 'input' | 'verifying' | 'success' | 'error';
+  readonly step: 'instructions' | 'site' | 'input' | 'verifying' | 'success' | 'error';
+  readonly site: LeetCodeSite;
   readonly sessionToken: string;
   readonly csrfToken: string;
   readonly focusedField: 'session' | 'csrf';
@@ -343,7 +347,9 @@ export type ConfigMsg =
   | { readonly type: 'CONFIG_EDIT_INPUT'; readonly char: string }
   | { readonly type: 'CONFIG_EDIT_BACKSPACE' }
   | { readonly type: 'CONFIG_EDIT_SAVE' }
-  | { readonly type: 'CONFIG_EDIT_CANCEL' };
+  | { readonly type: 'CONFIG_EDIT_CANCEL' }
+  | { readonly type: 'CONFIG_SITE_CONFIRM' }
+  | { readonly type: 'CONFIG_SITE_CANCEL' };
 
 export type HelpMsg =
   | { readonly type: 'HELP_SCROLL_UP' }
@@ -356,6 +362,7 @@ export type HelpMsg =
 export type LoginMsg =
   | { readonly type: 'LOGIN_SESSION_INPUT'; readonly value: string }
   | { readonly type: 'LOGIN_CSRF_INPUT'; readonly value: string }
+  | { readonly type: 'LOGIN_SWITCH_SITE' }
   | { readonly type: 'LOGIN_SUBMIT' }
   | { readonly type: 'LOGIN_BACK' }
   | { readonly type: 'LOGIN_SWITCH_FOCUS' }
@@ -438,7 +445,7 @@ export type Command =
   | { readonly type: 'CMD_SWITCH_WORKSPACE'; readonly name: string }
   | { readonly type: 'CMD_FETCH_CHANGELOG' }
   | { readonly type: 'CMD_LOGOUT' }
-  | { readonly type: 'CMD_LOGIN'; readonly session: string; readonly csrf: string };
+  | { readonly type: 'CMD_LOGIN'; readonly session: string; readonly csrf: string; readonly site: LeetCodeSite };
 
 export const Cmd = {
   none: (): Command => ({ type: 'CMD_NONE' }),
@@ -482,7 +489,12 @@ export const Cmd = {
   switchWorkspace: (name: string): Command => ({ type: 'CMD_SWITCH_WORKSPACE', name }),
   fetchChangelog: (): Command => ({ type: 'CMD_FETCH_CHANGELOG' }),
   logout: (): Command => ({ type: 'CMD_LOGOUT' }),
-  login: (session: string, csrf: string): Command => ({ type: 'CMD_LOGIN', session, csrf }),
+  login: (session: string, csrf: string, site: LeetCodeSite): Command => ({
+    type: 'CMD_LOGIN',
+    session,
+    csrf,
+    site,
+  }),
 };
 
 export function createInitialModel(username?: string): AppModel {

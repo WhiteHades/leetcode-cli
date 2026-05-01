@@ -1,5 +1,38 @@
 # Release Notes
 
+## v3.1.0
+
+> **Release Date**: 2026-05-01
+> **Focus**: LeetCode China (leetcode.cn) Full Support + Credential UX
+
+### 🌏 LeetCode China Support
+
+- Full `leetcode.cn` integration across CLI and TUI.
+- New `LeetCodeSite` type with site utility helpers (`normalizeLeetCodeSiteInput`, `getLeetCodeSiteLabel`).
+- GraphQL query packs split into site-specific files (`queries.global.ts`, `queries.cn.ts`) — CN uses the correct native schema for problem list, daily, and problem detail.
+- CN-specific Zod schemas for type-safe response parsing.
+- CN response adapters that normalize China API responses into the shared CLI data model.
+- `LeetCodeClient` is now fully site-aware: switches base URL, query pack, and cookie headers automatically.
+- Site selection available in `login`, `config`, and `workspace` commands.
+- Site preference persisted per workspace in config file.
+- TUI Config screen: site switching with a mandatory confirmation modal that forces an immediate session logout and redirect to login.
+
+### 🔐 Credential & Auth UX
+
+- `leetcode login --help` now documents all three credential storage backends:
+  1. **System Keychain** (default) — macOS/Windows/Linux OS-native secure storage via `keytar`.
+  2. **Encrypted File** — AES-256-GCM via `LEETCODECLI_CREDENTIAL_BACKEND=file` + `LEETCODECLI_MASTER_KEY`.
+  3. **Environment Variables** — read-only headless mode via `LEETCODE_SESSION` + `LEETCODE_CSRF_TOKEN`.
+- TUI site switch now correctly wipes the in-memory session (not just persisted config), ensuring users are immediately signed out and redirected to the login screen.
+
+### 🧪 Test Stability
+
+- Mocked `versionStorage` in update/changelog tests to prevent phantom `999.0.0` update cache leakage into real environments.
+- Mocked outbound `got` network requests in changelog tests to prevent rate-limit failures in CI.
+- All 283 tests pass cleanly across Node 20/22/24 on Ubuntu and macOS.
+
+---
+
 ## v3.0.1
 
 > **Release Date**: 2026-04-20

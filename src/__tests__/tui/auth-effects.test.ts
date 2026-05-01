@@ -41,8 +41,17 @@ const { mockCredentials, mockLeetCodeClient } = vi.hoisted(() => ({
     getPath: vi.fn(() => '/tmp/.leetcode/credentials.v2.enc.json'),
   },
   mockLeetCodeClient: {
+    setSite: vi.fn(),
     setCredentials: vi.fn(),
     checkAuth: vi.fn(),
+  },
+}));
+
+const { mockConfig } = vi.hoisted(() => ({
+  mockConfig: {
+    setSite: vi.fn(),
+    getSite: vi.fn(() => 'leetcode.com'),
+    getConfig: vi.fn(() => ({ site: 'leetcode.com' })),
   },
 }));
 
@@ -58,6 +67,10 @@ vi.mock('../../storage/credentials.js', () => ({
 
 vi.mock('../../api/client.js', () => ({
   leetcodeClient: mockLeetCodeClient,
+}));
+
+vi.mock('../../storage/config.js', () => ({
+  config: mockConfig,
 }));
 
 import { executeCommand } from '../../tui/commands/effects.js';
@@ -84,7 +97,7 @@ describe('TUI auth effects', () => {
 
     const dispatched: AppMsg[] = [];
     executeCommand(
-      { type: 'CMD_LOGIN', session: 'session-token', csrf: 'csrf-token' },
+      { type: 'CMD_LOGIN', session: 'session-token', csrf: 'csrf-token', site: 'leetcode.com' },
       (msg) => dispatched.push(msg)
     );
 
@@ -109,7 +122,7 @@ describe('TUI auth effects', () => {
 
     const dispatched: AppMsg[] = [];
     executeCommand(
-      { type: 'CMD_LOGIN', session: 'session-token', csrf: 'csrf-token' },
+      { type: 'CMD_LOGIN', session: 'session-token', csrf: 'csrf-token', site: 'leetcode.com' },
       (msg) => dispatched.push(msg)
     );
 
@@ -164,5 +177,33 @@ describe('TUI auth effects', () => {
 
     expect(dispatched).toContainEqual({ type: 'GLOBAL_ERROR', error: 'System keychain is unavailable.' });
     expect(dispatched).toContainEqual({ type: 'AUTH_CHECK_COMPLETE', user: null });
+  });
+
+  it('should persist selected site before verifying login credentials', async () => {
+    mockCredentials.status.mockResolvedValueOnce({
+      mode: 'keychain',
+      backend: 'keychain',
+      source: null,
+      hasCredentials: false,
+      readOnly: false,
+      reason: null,
+      path: null,
+    } as any);
+    mockLeetCodeClient.checkAuth.mockResolvedValueOnce({
+      isSignedIn: true,
+      username: 'dong',
+    });
+
+    const dispatched: AppMsg[] = [];
+    executeCommand(
+      { type: 'CMD_LOGIN', session: 'session-token', csrf: 'csrf-token', site: 'leetcode.cn' },
+      (msg) => dispatched.push(msg)
+    );
+
+    await flushAsync();
+
+    expect(mockConfig.setSite).toHaveBeenCalledWith('leetcode.cn');
+    expect(mockLeetCodeClient.setSite).toHaveBeenCalledWith('leetcode.cn');
+    expect(dispatched).toContainEqual({ type: 'LOGIN_SUCCESS', username: 'dong' });
   });
 });

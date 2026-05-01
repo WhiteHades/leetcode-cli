@@ -25,7 +25,7 @@ A modern, feature-rich LeetCode CLI built with TypeScript.
 - 📸 **Solution snapshots** - Save, restore, and compare solution versions
 - 👥 **Collaborative coding** - Solve problems with a partner
 - 📁 **Workspaces** - Isolate contexts (interview prep, study, contests)
-- ⚙️ **Configurable** - Set language, editor, and working directory
+- ⚙️ **Configurable** - Set language, editor, working directory, and LeetCode site
 - 🖥️ **Interactive TUI** - Launch full-screen terminal workflow with `leetcode`
 - 📂 **Smart file discovery** - Use problem ID, filename, or full path
 - 🔄 **Git Sync** - Auto-sync solutions to GitHub/GitLab
@@ -54,6 +54,9 @@ leetcode
 # Login with your LeetCode cookies
 leetcode login
 
+# Optional: switch to LeetCode China
+leetcode config --site leetcode.cn
+
 # Get today's daily challenge
 leetcode daily
 
@@ -78,6 +81,19 @@ Run `leetcode` with no arguments to open the full-screen TUI.
 - Uses a unified bottom drawer in Problem view for hints, submissions, snapshots, notes, and status output.
 
 See [docs/tui.md](docs/tui.md) for full keybindings and behavior.
+
+## Site Support
+
+- Default site: `leetcode.com`
+- Optional site: `leetcode.cn`
+- Set site with:
+
+```bash
+leetcode config --site leetcode.com
+leetcode config --site leetcode.cn
+```
+
+The CLI keeps command semantics the same and applies site-specific GraphQL queries/adapters internally.
 
 ## Commands
 

@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import type { ConfigScreenModel } from '../../types.js';
 import {
+  keyHint,
   renderFooterHints,
   renderScreenTitle,
   renderSectionHeader,
@@ -12,6 +13,7 @@ import { colors, borders, icons } from '../../theme.js';
 
 const EXAMPLES: Record<string, string> = {
   language: 'Example: typescript, python3, cpp, sql',
+  site: 'Example: leetcode.com or leetcode.cn',
   editor: 'Example: code, vim, nvim',
   workdir: 'Example: /Users/name/leetcode',
   repo: 'Example: https://github.com/user/leetcode.git',
@@ -91,7 +93,7 @@ function renderOptionDetails(model: ConfigScreenModel, width: number): string[] 
   lines.push(chalk.hex(colors.textMuted)(truncate(EXAMPLES[option.id] || '', paneWidth - 2)));
   lines.push('');
 
-  if (option.id === 'language' || option.id === 'workdir') {
+  if (option.id === 'language' || option.id === 'workdir' || option.id === 'site') {
     lines.push(chalk.hex(colors.textMuted)('Validation: required'));
   } else {
     lines.push(chalk.hex(colors.textMuted)('Validation: optional'));
@@ -109,6 +111,13 @@ function renderOptionDetails(model: ConfigScreenModel, width: number): string[] 
 }
 
 function renderFooter(model: ConfigScreenModel, width: number): string[] {
+  if (model.showSiteConfirm) {
+    return [
+      chalk.bgYellow.black(` Warning: Switching sites clears credentials. Proceed? `),
+      `${keyHint('Enter', 'Yes, logout & switch')}  ${keyHint('Esc', 'Cancel')}`,
+    ];
+  }
+
   return renderFooterHints(
     [
       { key: '↑/↓', label: model.paneFocus === 'list' ? 'Move option' : 'Move option' },

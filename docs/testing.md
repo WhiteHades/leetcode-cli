@@ -81,6 +81,7 @@ Run the actual compiled CLI binary to catch:
 Deterministic CLI command-flow checks run in the CI OS matrix (Linux/macOS/Windows):
 
 - Config set/read with SQL language and path values
+- Config set/read with site selection (`leetcode.com` / `leetcode.cn`)
 - Workspace create/use/list/current command flows
 - Snapshot save/list/diff flow on real SQL files
 - Built CLI help output includes SQL language support

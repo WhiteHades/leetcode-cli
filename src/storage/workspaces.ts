@@ -3,12 +3,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { isValidWorkspaceName } from '../utils/validation.js';
+import type { LeetCodeSite } from '../types.js';
 
 export interface WorkspaceConfig {
   workDir: string;
   lang: string;
   editor?: string;
   syncRepo?: string;
+  site?: LeetCodeSite;
 }
 
 export interface WorkspaceRegistry {
@@ -64,6 +66,7 @@ export const workspaceStorage = {
       this.create('default', {
         workDir: join(homedir(), 'leetcode'),
         lang: 'typescript',
+        site: 'leetcode.com',
       });
       registry.workspaces = ['default'];
       registry.active = 'default';
@@ -219,6 +222,7 @@ export const workspaceStorage = {
     return {
       workDir: join(homedir(), 'leetcode'),
       lang: 'typescript',
+      site: 'leetcode.com',
     };
   },
 

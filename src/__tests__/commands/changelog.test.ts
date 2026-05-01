@@ -1,6 +1,20 @@
 // Changelog command tests - integration tests that hit real GitHub API
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { outputContains } from '../setup.js';
+
+vi.mock('got', () => ({
+  default: () => ({
+    text: async () => `
+## v2.0.0
+### ⚠️ Breaking Change
+- **Config**: Something changed
+
+## v1.0.0
+- Initial release
+`,
+  }),
+}));
+
 import { changelogCommand } from '../../commands/changelog.js';
 
 describe('Changelog Command', () => {
