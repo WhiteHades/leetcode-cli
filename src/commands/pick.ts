@@ -15,6 +15,7 @@ import {
 import { openInEditor } from '../utils/editor.js';
 import { requireAuth } from '../utils/auth.js';
 import { normalizeLanguageInput } from '../utils/languages.js';
+import { writeCurrentProblemContext } from '../utils/current-context.js';
 
 export interface PickOptions {
   lang?: string;
@@ -105,6 +106,9 @@ export async function pickCommand(idOrSlug: string, options: PickOptions): Promi
     const filePath = join(targetDir, fileName);
 
     if (existsSync(filePath)) {
+      try {
+        await writeCurrentProblemContext(workDir, problem, { solutionPath: filePath });
+      } catch {}
       spinner.warn(`File already exists: ${fileName}`);
       console.log(chalk.gray(`Path: ${filePath}`));
 
@@ -116,6 +120,9 @@ export async function pickCommand(idOrSlug: string, options: PickOptions): Promi
     }
 
     await writeFile(filePath, content, 'utf-8');
+    try {
+      await writeCurrentProblemContext(workDir, problem, { solutionPath: filePath });
+    } catch {}
 
     spinner.succeed(`Created ${chalk.green(fileName)}`);
     console.log(chalk.gray(`Path: ${filePath}`));

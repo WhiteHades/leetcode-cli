@@ -2,7 +2,9 @@
 import ora from 'ora';
 import chalk from 'chalk';
 import { leetcodeClient } from '../api/client.js';
+import { config } from '../storage/config.js';
 import { requireAuth } from '../utils/auth.js';
+import { writeCurrentProblemContext } from '../utils/current-context.js';
 import { displayProblemDetail } from '../utils/display.js';
 
 export async function showCommand(idOrSlug: string): Promise<void> {
@@ -27,6 +29,9 @@ export async function showCommand(idOrSlug: string): Promise<void> {
     }
 
     spinner.stop();
+    try {
+      await writeCurrentProblemContext(config.getWorkDir(), problem);
+    } catch {}
     displayProblemDetail(problem);
   } catch (error) {
     spinner.fail('Failed to fetch problem');

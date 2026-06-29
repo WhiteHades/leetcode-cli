@@ -9,6 +9,7 @@ import {
   getPremiumPlaceholderCode,
 } from '../../utils/templates.js';
 import { normalizeLanguageInput, resolveLeetCodeLangSlug } from '../../utils/languages.js';
+import { writeCurrentProblemContext } from '../../utils/current-context.js';
 import { snapshotStorage } from '../../storage/snapshots.js';
 import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
@@ -197,6 +198,9 @@ async function fetchProblems(
 async function fetchProblemDetail(slug: string, dispatch: Dispatch): Promise<void> {
   try {
     const detail = await leetcodeClient.getProblem(slug);
+    try {
+      await writeCurrentProblemContext(config.getWorkDir(), detail);
+    } catch {}
     dispatch({ type: 'PROBLEM_DETAIL_LOADED', detail });
   } catch (err) {
     dispatch({
@@ -351,9 +355,35 @@ async function pickProblem(slug: string, dispatch: Dispatch): Promise<void> {
 
     if (!existsSync(filePath)) {
       await fs.writeFile(filePath, content, 'utf-8');
+      try {
+        await writeCurrentProblemContext(workDir, problem, { solutionPath: filePath });
+      } catch {}
       dispatch({ type: 'PROBLEM_ACTION_SUCCESS', message: `Created ${fileName}` });
     } else {
-      dispatch({ type: 'PROBLEM_ACTION_SUCCESS', message: `File ready: ${fileName}` });
+      // File already exists. Preserve the existing approach by renaming
+      // it to <base>.1.<ext>, <base>.2.<ext>, ... and writing a fresh
+      // template at the original path. This lets the user iterate on
+      // multiple methods for the same problem without losing earlier
+      // attempts.
+      const ext = path.extname(filePath);
+      const base = filePath.slice(0, filePath.length - ext.length);
+      let variantIndex = 1;
+      let variantPath = `${base}.${variantIndex}${ext}`;
+      while (existsSync(variantPath)) {
+        variantIndex += 1;
+        variantPath = `${base}.${variantIndex}${ext}`;
+      }
+      await fs.rename(filePath, variantPath);
+
+      await fs.writeFile(filePath, content, 'utf-8');
+      try {
+        await writeCurrentProblemContext(workDir, problem, { solutionPath: filePath });
+      } catch {}
+      const variantName = path.basename(variantPath);
+      dispatch({
+        type: 'PROBLEM_ACTION_SUCCESS',
+        message: `Saved previous as ${variantName}; new template at ${fileName}`,
+      });
     }
   } catch (err) {
     dispatch({
