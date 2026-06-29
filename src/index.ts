@@ -96,8 +96,8 @@ ${chalk.yellow('How to login:')}
   5. Paste when prompted by this command
 
 ${chalk.yellow('Storage Options:')}
-  ${chalk.cyan('1. System Keychain (Default):')} Securely stores credentials in your OS keychain.
-  ${chalk.cyan('2. Encrypted File:')} Export ${chalk.green('LEETCODECLI_CREDENTIAL_BACKEND=file')} (AES-256).
+  ${chalk.cyan('1. Encrypted File (Default):')} Stores AES-256 encrypted credentials in ${chalk.green('~/.leetcode/')}.
+  ${chalk.cyan('2. System Keychain:')} Export ${chalk.green('LEETCODECLI_CREDENTIAL_BACKEND=keychain')}.
   ${chalk.cyan('3. Environment Variables:')} Export ${chalk.green('LEETCODE_SESSION')} & ${chalk.green('LEETCODE_CSRF_TOKEN')}.
 `
   )

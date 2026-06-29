@@ -18,9 +18,9 @@ The CLI requires your LeetCode authentication cookies.
 
 Credential backend is selected via environment variable:
 
-- Default: `LEETCODECLI_CREDENTIAL_BACKEND=keychain` (system keychain)
-- Optional: `LEETCODECLI_CREDENTIAL_BACKEND=file` (encrypted file backend)
-- File backend requires: `LEETCODECLI_MASTER_KEY`
+- Default: encrypted file backend at `~/.leetcode/credentials.v2.enc.json`
+- The default backend creates `~/.leetcode/credentials.v2.key` automatically when `LEETCODECLI_MASTER_KEY` is unset
+- Optional: `LEETCODECLI_CREDENTIAL_BACKEND=keychain` (system keychain)
 - Read-only env mode: set both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN`
 
 When env mode is active, `login/logout` do not persist or clear credentials.
@@ -36,8 +36,7 @@ $env:LEETCODECLI_CREDENTIAL_BACKEND = "keychain"
 Use encrypted file backend:
 
 ```powershell
-$env:LEETCODECLI_CREDENTIAL_BACKEND = "file"
-$env:LEETCODECLI_MASTER_KEY = "<your_master_key>"
+$env:LEETCODECLI_MASTER_KEY = "<optional_master_key>"
 ```
 
 Use env read-only auth mode:
@@ -103,7 +102,7 @@ Settings are now stored per-workspace for isolation:
 | Timer       | `~/.leetcode/workspaces/<name>/timer.json`  | Per-workspace |
 | Collab      | `~/.leetcode/workspaces/<name>/collab.json` | Per-workspace |
 | Snapshots   | `~/.leetcode/workspaces/<name>/snapshots/`  | Per-workspace |
-| Credentials | Keychain (default) or `~/.leetcode/credentials.v2.enc.json` (file backend) | Shared |
+| Credentials | `~/.leetcode/credentials.v2.enc.json` plus local key file by default; keychain if selected | Shared |
 | Bookmarks   | `~/.leetcode/bookmarks.json`                | Shared        |
 
 Use `leetcode workspace current` to see which workspace is active.

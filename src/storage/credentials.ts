@@ -8,6 +8,7 @@ import type { LeetCodeCredentials } from '../types.js';
 const LEETCODE_DIR = join(homedir(), '.leetcode');
 const LEGACY_CREDENTIALS_FILE = join(LEETCODE_DIR, 'credentials.json');
 const ENCRYPTED_CREDENTIALS_FILE = join(LEETCODE_DIR, 'credentials.v2.enc.json');
+const MASTER_KEY_FILE = join(LEETCODE_DIR, 'credentials.v2.key');
 
 const KEYCHAIN_SERVICE = 'leetcode-cli';
 const KEYCHAIN_ACCOUNT = 'auth';
@@ -81,7 +82,7 @@ function hasPartialEnvCredentials(): boolean {
 
 function getSelectedBackend(): CredentialBackend {
   const raw = process.env['LEETCODECLI_CREDENTIAL_BACKEND']?.trim().toLowerCase();
-  return raw === 'file' ? 'file' : 'keychain';
+  return raw === 'keychain' ? 'keychain' : 'file';
 }
 
 function ensureDir(): void {
@@ -106,6 +107,24 @@ function lockFile(path: string): void {
 
 function deriveKey(masterKey: string, salt: Buffer): Buffer {
   return scryptSync(masterKey, salt, 32, { N: 32768, r: 8, p: 1, maxmem: 128 * 1024 * 1024 }) as Buffer;
+}
+
+function getFileMasterKey(create: boolean): string | null {
+  const envMasterKey = process.env['LEETCODECLI_MASTER_KEY'];
+  if (envMasterKey) return envMasterKey;
+
+  if (existsSync(MASTER_KEY_FILE)) {
+    const fileMasterKey = readFileSync(MASTER_KEY_FILE, 'utf8').trim();
+    return fileMasterKey.length > 0 ? fileMasterKey : null;
+  }
+
+  if (!create) return null;
+
+  ensureDir();
+  const generated = randomBytes(32).toString('hex');
+  writeFileSync(MASTER_KEY_FILE, generated + '\n', { encoding: 'utf8', mode: 0o600 });
+  lockFile(MASTER_KEY_FILE);
+  return generated;
 }
 
 function encryptCredentials(creds: LeetCodeCredentials, masterKey: string): EncryptedCredentialsV2 {
@@ -150,6 +169,41 @@ function decryptCredentials(
   }
 }
 
+function writeEncryptedCredentials(creds: LeetCodeCredentials): CredentialOperationResult {
+  const masterKey = getFileMasterKey(true);
+  if (!masterKey) {
+    return failureResult(
+      'file',
+      'FILE_MISSING_MASTER_KEY',
+      ENCRYPTED_CREDENTIALS_FILE,
+      'Failed to create encrypted credential key.'
+    );
+  }
+
+  try {
+    ensureDir();
+    const payload = encryptCredentials(creds, masterKey);
+    writeFileSync(ENCRYPTED_CREDENTIALS_FILE, JSON.stringify(payload, null, 2) + '\n', {
+      encoding: 'utf8',
+      mode: 0o600,
+    });
+    lockFile(ENCRYPTED_CREDENTIALS_FILE);
+    return successResult(
+      'file',
+      'file',
+      ENCRYPTED_CREDENTIALS_FILE,
+      `Credentials encrypted and saved to ${ENCRYPTED_CREDENTIALS_FILE}.`
+    );
+  } catch {
+    return failureResult(
+      'file',
+      'FILE_DECRYPT_FAILED',
+      ENCRYPTED_CREDENTIALS_FILE,
+      'Failed to write encrypted credentials.'
+    );
+  }
+}
+
 function parseKeychainSecret(secret: string): LeetCodeCredentials | null {
   try {
     const parsed = JSON.parse(secret);
@@ -184,7 +238,7 @@ function explainReason(reason: CredentialStatusReason): string {
     case 'KEYCHAIN_ERROR':
       return 'Failed to access system keychain credentials.';
     case 'FILE_MISSING_MASTER_KEY':
-      return 'File backend requires LEETCODECLI_MASTER_KEY to read or write credentials.';
+      return `Encrypted credentials exist at ${ENCRYPTED_CREDENTIALS_FILE}, but the master key is missing. Run "leetcode login" again.`;
     case 'FILE_DECRYPT_FAILED':
       return 'Stored encrypted credentials could not be decrypted. Run "leetcode login" again.';
     case 'LEGACY_CREDENTIALS_IGNORED':
@@ -300,14 +354,17 @@ async function readFromKeychain(
 function readFromEncryptedFile(
   envPartial: boolean
 ): { status: CredentialStoreStatus; creds: LeetCodeCredentials | null } {
-  const masterKey = process.env['LEETCODECLI_MASTER_KEY'];
+  const masterKey = getFileMasterKey(false);
   const path = ENCRYPTED_CREDENTIALS_FILE;
 
   if (!masterKey) {
-    const reason =
-      !existsSync(path) && existsSync(LEGACY_CREDENTIALS_FILE)
-        ? 'LEGACY_CREDENTIALS_IGNORED'
-        : 'FILE_MISSING_MASTER_KEY';
+    const reason = existsSync(LEGACY_CREDENTIALS_FILE)
+      ? 'LEGACY_CREDENTIALS_IGNORED'
+      : existsSync(path)
+        ? 'FILE_MISSING_MASTER_KEY'
+        : envPartial
+          ? 'ENV_PARTIAL'
+          : null;
     return {
       status: {
         mode: 'file',
@@ -436,7 +493,17 @@ async function resolveCredentialState(): Promise<{
   const envPartial = hasPartialEnvCredentials();
   const backend = getSelectedBackend();
   if (backend === 'file') {
-    return readFromEncryptedFile(envPartial);
+    const fileState = readFromEncryptedFile(envPartial);
+    if (!fileState.creds && fileState.status.reason === null) {
+      const keychainState = await readFromKeychain(envPartial);
+      if (keychainState.creds) {
+        const migration = writeEncryptedCredentials(keychainState.creds);
+        if (migration.ok) {
+          return readFromEncryptedFile(envPartial);
+        }
+      }
+    }
+    return fileState;
   }
   return readFromKeychain(envPartial);
 }
@@ -470,38 +537,7 @@ export const credentials = {
 
     const backend = getSelectedBackend();
     if (backend === 'file') {
-      const masterKey = process.env['LEETCODECLI_MASTER_KEY'];
-      if (!masterKey) {
-        return failureResult(
-          'file',
-          'FILE_MISSING_MASTER_KEY',
-          ENCRYPTED_CREDENTIALS_FILE,
-          'File backend requires LEETCODECLI_MASTER_KEY.'
-        );
-      }
-
-      try {
-        ensureDir();
-        const payload = encryptCredentials(creds, masterKey);
-        writeFileSync(ENCRYPTED_CREDENTIALS_FILE, JSON.stringify(payload, null, 2) + '\n', {
-          encoding: 'utf8',
-          mode: 0o600,
-        });
-        lockFile(ENCRYPTED_CREDENTIALS_FILE);
-        return successResult(
-          'file',
-          'file',
-          ENCRYPTED_CREDENTIALS_FILE,
-          `Credentials encrypted and saved to ${ENCRYPTED_CREDENTIALS_FILE}.`
-        );
-      } catch {
-        return failureResult(
-          'file',
-          'FILE_DECRYPT_FAILED',
-          ENCRYPTED_CREDENTIALS_FILE,
-          'Failed to write encrypted credentials.'
-        );
-      }
+      return writeEncryptedCredentials(creds);
     }
 
     try {
@@ -529,6 +565,9 @@ export const credentials = {
       try {
         if (existsSync(ENCRYPTED_CREDENTIALS_FILE)) {
           unlinkSync(ENCRYPTED_CREDENTIALS_FILE);
+        }
+        if (!process.env['LEETCODECLI_MASTER_KEY'] && existsSync(MASTER_KEY_FILE)) {
+          unlinkSync(MASTER_KEY_FILE);
         }
         return successResult(
           'file',

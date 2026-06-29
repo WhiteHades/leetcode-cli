@@ -1,5 +1,14 @@
 # Release Notes
 
+## Unreleased
+
+### Credential Storage
+
+- Default credential persistence is now encrypted file storage under `~/.leetcode/`.
+- When no `LEETCODECLI_MASTER_KEY` is set, the CLI creates a local `~/.leetcode/credentials.v2.key` file with restrictive permissions.
+- Existing system-keychain credentials are migrated into encrypted file storage on first successful default-backend read.
+- System keychain storage remains available with `LEETCODECLI_CREDENTIAL_BACKEND=keychain`.
+
 ## v3.1.0
 
 > **Release Date**: 2026-05-01

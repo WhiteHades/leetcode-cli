@@ -435,9 +435,9 @@ This CLI uses cookie-based authentication from your LeetCode browser session.
 
 ### Credential Backend
 
-- Default backend: system keychain (`keytar`)
-- Explicit encrypted-file backend: set `LEETCODECLI_CREDENTIAL_BACKEND=file`
-- File backend requires `LEETCODECLI_MASTER_KEY`
+- Default backend: encrypted file storage under `~/.leetcode/`
+- The default backend creates `~/.leetcode/credentials.v2.key` automatically when `LEETCODECLI_MASTER_KEY` is unset
+- Optional system keychain backend: set `LEETCODECLI_CREDENTIAL_BACKEND=keychain`
 - Env read-only mode: set both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN`
 
 If both env vars are present, the CLI uses them directly and `login/logout` run in read-only env mode.
@@ -445,9 +445,9 @@ If both env vars are present, the CLI uses them directly and `login/logout` run 
 Windows (PowerShell) quick setup:
 
 ```powershell
-$env:LEETCODECLI_CREDENTIAL_BACKEND = "keychain"
-# or encrypted file backend:
-# $env:LEETCODECLI_CREDENTIAL_BACKEND = "file"
+# optional system keychain backend:
+# $env:LEETCODECLI_CREDENTIAL_BACKEND = "keychain"
+# optional custom encrypted-file master key:
 # $env:LEETCODECLI_MASTER_KEY = "<your_master_key>"
 ```
 

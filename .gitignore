@@ -11,6 +11,11 @@ build/
 .env.local
 .env*.local
 
+# Local credential artifacts
+.leetcode/
+credentials.v2.enc.json
+credentials.v2.key
+
 # Logs
 logs/
 *.log

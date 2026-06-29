@@ -81,12 +81,60 @@ describe('credentials storage resolver', () => {
     const { credentials } = await loadCredentialsModule();
     const status = await credentials.status();
 
-    expect(status.mode).toBe('keychain');
+    expect(status.mode).toBe('file');
     expect(status.hasCredentials).toBe(false);
     expect(status.reason).toBe('ENV_PARTIAL');
   });
 
-  it('should use keychain backend by default', async () => {
+  it('should use encrypted file backend by default', async () => {
+    const { credentials } = await loadCredentialsModule();
+
+    const setResult = await credentials.set({ session: 'file-session', csrfToken: 'file-csrf' });
+    expect(setResult.ok).toBe(true);
+    expect(setResult.source).toBe('file');
+
+    const keyPath = join(tempHome, '.leetcode', 'credentials.v2.key');
+    const filePath = join(tempHome, '.leetcode', 'credentials.v2.enc.json');
+    expect(existsSync(keyPath)).toBe(true);
+    expect(existsSync(filePath)).toBe(true);
+
+    await expect(credentials.get()).resolves.toEqual({
+      session: 'file-session',
+      csrfToken: 'file-csrf',
+    });
+
+    const status = await credentials.status();
+    expect(status.source).toBe('file');
+    expect(status.mode).toBe('file');
+  });
+
+  it('should migrate existing keychain credentials to encrypted file by default', async () => {
+    const { credentials } = await loadCredentialsModule();
+    keytarMock.getPassword.mockResolvedValue(
+      JSON.stringify({ session: 'kc-session', csrfToken: 'kc-csrf' })
+    );
+
+    await expect(credentials.get()).resolves.toEqual({
+      session: 'kc-session',
+      csrfToken: 'kc-csrf',
+    });
+
+    const filePath = join(tempHome, '.leetcode', 'credentials.v2.enc.json');
+    const keyPath = join(tempHome, '.leetcode', 'credentials.v2.key');
+    expect(existsSync(filePath)).toBe(true);
+    expect(existsSync(keyPath)).toBe(true);
+
+    keytarMock.getPassword.mockClear();
+    await expect(credentials.get()).resolves.toEqual({
+      session: 'kc-session',
+      csrfToken: 'kc-csrf',
+    });
+    expect(keytarMock.getPassword).not.toHaveBeenCalled();
+  });
+
+  it('should use keychain backend when explicitly selected', async () => {
+    process.env['LEETCODECLI_CREDENTIAL_BACKEND'] = 'keychain';
+
     const { credentials } = await loadCredentialsModule();
     keytarMock.getPassword.mockResolvedValue(JSON.stringify({ session: 'kc-session', csrfToken: 'kc-csrf' }));
 
@@ -101,6 +149,8 @@ describe('credentials storage resolver', () => {
   });
 
   it('should surface KEYCHAIN_UNAVAILABLE when keychain access fails', async () => {
+    process.env['LEETCODECLI_CREDENTIAL_BACKEND'] = 'keychain';
+
     const { credentials } = await loadCredentialsModule();
     keytarMock.getPassword.mockRejectedValueOnce(
       new Error('Cannot autolaunch D-Bus without X11 $DISPLAY')
@@ -128,9 +178,7 @@ describe('credentials storage resolver', () => {
 });
 
 describe('credentials file backend', () => {
-  it('should surface FILE_MISSING_MASTER_KEY when file backend is selected without master key', async () => {
-    process.env['LEETCODECLI_CREDENTIAL_BACKEND'] = 'file';
-
+  it('should surface FILE_MISSING_MASTER_KEY when encrypted credentials exist without a master key', async () => {
     const filePath = join(tempHome, '.leetcode', 'credentials.v2.enc.json');
     mkdirSync(join(tempHome, '.leetcode'), { recursive: true });
     writeFileSync(filePath, '{}\n');
@@ -143,7 +191,6 @@ describe('credentials file backend', () => {
   });
 
   it('should surface FILE_DECRYPT_FAILED for invalid encrypted payload', async () => {
-    process.env['LEETCODECLI_CREDENTIAL_BACKEND'] = 'file';
     process.env['LEETCODECLI_MASTER_KEY'] = 'test-master-key';
 
     const filePath = join(tempHome, '.leetcode', 'credentials.v2.enc.json');
@@ -168,7 +215,6 @@ describe('credentials file backend', () => {
   });
 
   it('should write, read, and clear encrypted credentials in file mode', async () => {
-    process.env['LEETCODECLI_CREDENTIAL_BACKEND'] = 'file';
     process.env['LEETCODECLI_MASTER_KEY'] = 'test-master-key';
 
     const { credentials } = await loadCredentialsModule();
@@ -194,6 +240,25 @@ describe('credentials file backend', () => {
     const clearResult = await credentials.clear();
     expect(clearResult.ok).toBe(true);
     expect(existsSync(filePath)).toBe(false);
+  });
+
+  it('should create a local master key when LEETCODECLI_MASTER_KEY is unset', async () => {
+    const { credentials } = await loadCredentialsModule();
+
+    const setResult = await credentials.set({ session: 'generated-session', csrfToken: 'generated-csrf' });
+    expect(setResult.ok).toBe(true);
+
+    const keyPath = join(tempHome, '.leetcode', 'credentials.v2.key');
+    const filePath = join(tempHome, '.leetcode', 'credentials.v2.enc.json');
+    expect(existsSync(keyPath)).toBe(true);
+    expect(existsSync(filePath)).toBe(true);
+    expect(readFileSync(keyPath, 'utf8').trim()).toHaveLength(64);
+
+    const reloaded = await loadCredentialsModule();
+    await expect(reloaded.credentials.get()).resolves.toEqual({
+      session: 'generated-session',
+      csrfToken: 'generated-csrf',
+    });
   });
 
   it('should return read-only error for set/clear in env mode', async () => {

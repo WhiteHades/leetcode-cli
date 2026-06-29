@@ -45,8 +45,8 @@ Login to LeetCode with browser cookies.
 
 Notes:
 - `leetcode login` lets you choose site (`leetcode.com` or `leetcode.cn`) before cookie input.
-- Default credential backend is system keychain.
-- Set `LEETCODECLI_CREDENTIAL_BACKEND=file` with `LEETCODECLI_MASTER_KEY` for encrypted file mode.
+- Encrypted file storage is the default and creates a local key under `~/.leetcode/` when needed.
+- Set `LEETCODECLI_CREDENTIAL_BACKEND=keychain` to use the system keychain instead.
 - If both `LEETCODE_SESSION` and `LEETCODE_CSRF_TOKEN` are set, login runs in read-only env mode.
 
 **Usage**: `leetcode login`
